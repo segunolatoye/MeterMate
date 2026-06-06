@@ -75,6 +75,15 @@ export interface Deposit {
   created_at: string;
 }
 
+export interface PushSubscriptionItem {
+  id: string;
+  user_id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+  created_at: string;
+}
+
 export interface SessionUser {
   id: string;
   email: string;

@@ -4,6 +4,7 @@ import { getSessionUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { getTenantSummary } from '@/lib/calculations';
 import TenantSummaryCard from '@/components/TenantSummaryCard';
+import PushSubscriptionCard from '@/components/PushSubscriptionCard';
 import { 
   Zap, 
   Droplets, 
@@ -88,6 +89,9 @@ export default async function TenantDashboardPage() {
       <div className="px-6 -mt-8 flex flex-col gap-5">
         {/* Main summary cards */}
         <TenantSummaryCard summary={summary} />
+
+        {/* PWA Push Notification Permissions Subscriptions */}
+        <PushSubscriptionCard userId={user.id} />
 
         {/* Quick Utility Actions Row */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col gap-3">

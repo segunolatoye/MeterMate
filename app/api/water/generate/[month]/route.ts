@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, saveDb } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 import { WaterContribution } from '@/lib/types';
+import { notifyAllOccupants } from '@/lib/notifications';
 
 export async function POST(
   req: NextRequest,
@@ -51,6 +52,22 @@ export async function POST(
 
     if (generatedCount > 0) {
       await saveDb(db);
+
+      // Notify all occupants about the new water levy
+      try {
+        // Safe month name format
+        const parts = month.split('-');
+        const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+        const monthLabel = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+        await notifyAllOccupants({
+          title: 'New Water Levy Posted! 💧',
+          body: `The water levy of ₦3,000 for ${monthLabel} has been posted. Please log in to complete your payment.`,
+          url: '/dashboard'
+        });
+      } catch (notifyErr) {
+        console.error('Failed to notify occupants about new water levy:', notifyErr);
+      }
     }
 
     return NextResponse.json({ 

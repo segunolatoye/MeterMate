@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, saveDb, getCurrentRate } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
+import { notifyUser } from '@/lib/notifications';
 
 export async function PATCH(
   req: NextRequest,
@@ -96,6 +97,25 @@ export async function PATCH(
     }
 
     await saveDb(db);
+
+    // Notify the tenant about their confirmed payment
+    try {
+      const typeLabel = pType === 'electricity' ? 'electricity' : pType === 'water' ? 'water levy' : pType === 'deposit' ? 'deposit' : 'prepayment';
+      let notifyBody = `Your payment of ₦${payment.amount.toLocaleString()} for ${typeLabel} has been confirmed.`;
+      if (pType === 'electricity' || pType === 'prepayment') {
+        notifyBody += ' Your prepaid electricity token is now available on your dashboard!';
+      } else if (pType === 'water') {
+        notifyBody += ' Your water contribution has been updated to Paid.';
+      }
+
+      await notifyUser(tId, {
+        title: 'Payment Confirmed! ✅',
+        body: notifyBody,
+        url: '/dashboard'
+      });
+    } catch (notifyErr) {
+      console.error('Failed to dispatch payment confirmation notification:', notifyErr);
+    }
 
     return NextResponse.json({ 
       success: true, 

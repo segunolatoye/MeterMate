@@ -125,244 +125,11 @@ export const DEFAULT_DB: DatabaseSchema = {
       created_at: "2026-01-01T12:05:00Z"
     }
   ],
-  token_purchases: [
-    {
-      id: "purchase-1",
-      tenant_id: "tenant-elec-1",
-      date: "2026-01-10",
-      amount_paid: 12000,
-      units_received: 100,
-      rate_at_time: 120,
-      token_ref: "8821-4432-8898-1029",
-      created_by: "admin-123",
-      created_at: "2026-01-10T11:00:00Z"
-    },
-    {
-      id: "purchase-2",
-      tenant_id: "tenant-elec-1",
-      date: "2026-03-12",
-      amount_paid: 24000,
-      units_received: 200,
-      rate_at_time: 120,
-      token_ref: "1029-7756-3342-9908",
-      created_by: "admin-123",
-      created_at: "2026-03-12T15:00:00Z"
-    },
-    {
-      id: "purchase-3",
-      tenant_id: "tenant-elec-1",
-      date: "2026-05-01",
-      amount_paid: 18000,
-      units_received: 150,
-      rate_at_time: 120,
-      token_ref: "7654-8890-0012-3421",
-      created_by: "admin-123",
-      created_at: "2026-05-01T09:30:00Z"
-    }
-  ],
-  meter_readings: [
-    {
-      id: "reading-1",
-      tenant_id: "tenant-elec-1",
-      reading_date: "2026-01-01",
-      reading_kwh: 100,
-      notes: "Initial setup reading",
-      created_by: "admin-123",
-      created_at: "2026-01-01T15:00:00Z"
-    },
-    {
-      id: "reading-2",
-      tenant_id: "tenant-elec-1",
-      reading_date: "2026-03-01",
-      reading_kwh: 220,
-      notes: "End of Feb reading",
-      created_by: "admin-123",
-      created_at: "2026-03-01T18:00:00Z"
-    },
-    {
-      id: "reading-3",
-      tenant_id: "tenant-elec-1",
-      reading_date: "2026-05-01",
-      reading_kwh: 310,
-      notes: "End of April reading",
-      created_by: "admin-123",
-      created_at: "2026-05-01T17:30:00Z"
-    },
-    {
-      id: "reading-4",
-      tenant_id: "tenant-elec-1",
-      reading_date: "2026-06-01",
-      reading_kwh: 370,
-      notes: "End of May reading",
-      created_by: "admin-123",
-      created_at: "2026-06-01T10:00:00Z"
-    }
-  ],
-  water_contributions: [
-    {
-      id: "water-1",
-      tenant_id: "tenant-elec-1",
-      month: "2026-04",
-      amount: 3000,
-      status: "paid",
-      payment_id: "pay-water-1",
-      created_at: "2026-04-05T10:00:00Z"
-    },
-    {
-      id: "water-2",
-      tenant_id: "tenant-elec-1",
-      month: "2026-05",
-      amount: 3000,
-      status: "paid",
-      payment_id: "pay-water-2",
-      created_at: "2026-05-06T11:00:00Z"
-    },
-    {
-      id: "water-3",
-      tenant_id: "tenant-elec-1",
-      month: "2026-06",
-      amount: 3000,
-      status: "pending",
-      created_at: "2026-06-01T00:05:00Z"
-    },
-    {
-      id: "water-4",
-      tenant_id: "tenant-water-1",
-      month: "2026-04",
-      amount: 3000,
-      status: "paid",
-      payment_id: "pay-water-3",
-      created_at: "2026-04-05T10:30:00Z"
-    },
-    {
-      id: "water-5",
-      tenant_id: "tenant-water-1",
-      month: "2026-05",
-      amount: 3000,
-      status: "pending",
-      created_at: "2026-05-01T00:05:00Z"
-    },
-    {
-      id: "water-6",
-      tenant_id: "tenant-water-1",
-      month: "2026-06",
-      amount: 3000,
-      status: "pending",
-      created_at: "2026-06-01T00:05:00Z"
-    }
-  ],
-  payments: [
-    {
-      id: "pay-deposit-1",
-      tenant_id: "tenant-elec-1",
-      amount: 15000,
-      payment_type: "deposit",
-      payment_method: "manual",
-      paystack_reference: "MANUAL_DEP_1",
-      status: "confirmed",
-      confirmed_by: "admin-123",
-      note: "Initial compound deposit",
-      created_at: "2026-01-01T14:35:00Z"
-    },
-    {
-      id: "pay-elec-1",
-      tenant_id: "tenant-elec-1",
-      amount: 12000,
-      payment_type: "electricity",
-      payment_method: "paystack_card",
-      paystack_reference: "PSTK-998822",
-      status: "confirmed",
-      note: "Purchased 100 kWh tokens",
-      created_at: "2026-01-10T10:55:00Z"
-    },
-    {
-      id: "pay-elec-2",
-      tenant_id: "tenant-elec-1",
-      amount: 24000,
-      payment_type: "electricity",
-      payment_method: "paystack_card",
-      paystack_reference: "PSTK-384910",
-      status: "confirmed",
-      note: "Purchased 200 kWh tokens",
-      created_at: "2026-03-12T14:55:00Z"
-    },
-    {
-      id: "pay-elec-3",
-      tenant_id: "tenant-elec-1",
-      amount: 18000,
-      payment_type: "electricity",
-      payment_method: "paystack_card",
-      paystack_reference: "PSTK-009182",
-      status: "confirmed",
-      note: "Purchased 150 kWh tokens",
-      created_at: "2026-05-01T09:25:00Z"
-    },
-    {
-      id: "pay-water-1",
-      tenant_id: "tenant-elec-1",
-      amount: 3000,
-      payment_type: "water",
-      payment_method: "paystack_card",
-      paystack_reference: "PSTK-WA-1",
-      status: "confirmed",
-      note: "April water contribution",
-      created_at: "2026-04-05T10:00:00Z"
-    },
-    {
-      id: "pay-water-2",
-      tenant_id: "tenant-elec-1",
-      amount: 3000,
-      payment_type: "water",
-      payment_method: "paystack_card",
-      paystack_reference: "PSTK-WA-2",
-      status: "confirmed",
-      note: "May water contribution",
-      created_at: "2026-05-06T11:00:00Z"
-    },
-    {
-      id: "pay-water-3",
-      tenant_id: "tenant-water-1",
-      amount: 3000,
-      payment_type: "water",
-      payment_method: "paystack_card",
-      paystack_reference: "PSTK-WA-3",
-      status: "confirmed",
-      note: "April water contribution",
-      created_at: "2026-04-05T10:30:00Z"
-    },
-    {
-      id: "pay-bank-transfer-pending-1",
-      tenant_id: "tenant-elec-1",
-      amount: 10000,
-      payment_type: "prepayment",
-      payment_method: "paystack_transfer",
-      paystack_reference: "TX_MANUAL_ELEC_99",
-      status: "pending",
-      note: "Transferred from Sterling bank app - Emeka Obi",
-      created_at: "2026-06-05T16:15:00Z"
-    },
-    {
-      id: "pay-bank-transfer-pending-2",
-      tenant_id: "tenant-water-1",
-      amount: 3000,
-      payment_type: "water",
-      payment_method: "paystack_transfer",
-      paystack_reference: "TX_MANUAL_WATER_99",
-      status: "pending",
-      note: "May Water contribution transfer - Amina Yusuf",
-      created_at: "2026-06-06T08:30:00Z"
-    }
-  ],
-  deposits: [
-    {
-      id: "dep-1",
-      tenant_id: "tenant-elec-1",
-      amount: 15000,
-      refunded: false,
-      note: "Initial security deposit Flat 2",
-      created_at: "2026-01-01T14:35:00Z"
-    }
-  ]
+  token_purchases: [],
+  meter_readings: [],
+  water_contributions: [],
+  payments: [],
+  deposits: []
 };
 
 // Async read from Firestore with Error handling wrapper
@@ -396,79 +163,75 @@ export async function getDb(): Promise<DatabaseSchema> {
       deposits: depositsSnap.docs.map(doc => doc.data() as Deposit)
     };
 
+    // Purge old seeded records if they exist in Firestore
+    const seededPurchaseIds = ["purchase-1", "purchase-2", "purchase-3"];
+    const seededReadingIds = ["reading-1", "reading-2", "reading-3", "reading-4"];
+    const seededContributionIds = ["water-1", "water-2", "water-3", "water-4", "water-5", "water-6"];
+    const seededPaymentIds = [
+      "pay-deposit-1", "pay-elec-1", "pay-elec-2", "pay-elec-3", 
+      "pay-water-1", "pay-water-2", "pay-water-3", 
+      "pay-bank-transfer-pending-1", "pay-bank-transfer-pending-2"
+    ];
+    const seededDepositIds = ["dep-1"];
+
+    let firestoreCleaned = false;
+    const deletePromises: Promise<any>[] = [];
+
+    schema.token_purchases = schema.token_purchases.filter(item => {
+      if (seededPurchaseIds.includes(item.id)) {
+        deletePromises.push(deleteDoc(doc(db, 'token_purchases', item.id)));
+        firestoreCleaned = true;
+        return false;
+      }
+      return true;
+    });
+
+    schema.meter_readings = schema.meter_readings.filter(item => {
+      if (seededReadingIds.includes(item.id)) {
+        deletePromises.push(deleteDoc(doc(db, 'meter_readings', item.id)));
+        firestoreCleaned = true;
+        return false;
+      }
+      return true;
+    });
+
+    schema.water_contributions = schema.water_contributions.filter(item => {
+      if (seededContributionIds.includes(item.id)) {
+        deletePromises.push(deleteDoc(doc(db, 'water_contributions', item.id)));
+        firestoreCleaned = true;
+        return false;
+      }
+      return true;
+    });
+
+    schema.payments = schema.payments.filter(item => {
+      if (seededPaymentIds.includes(item.id)) {
+        deletePromises.push(deleteDoc(doc(db, 'payments', item.id)));
+        firestoreCleaned = true;
+        return false;
+      }
+      return true;
+    });
+
+    schema.deposits = schema.deposits.filter(item => {
+      if (seededDepositIds.includes(item.id)) {
+        deletePromises.push(deleteDoc(doc(db, 'deposits', item.id)));
+        firestoreCleaned = true;
+        return false;
+      }
+      return true;
+    });
+
+    if (firestoreCleaned) {
+      console.log('Purging seeded records from active Firestore database...');
+      await Promise.all(deletePromises);
+    }
+
     // If the database has no profiles, seed the database with defaults automatically
     if (schema.profiles.length === 0) {
       console.log('Google Firestore is empty. Seeding DEFAULT_DB...');
       await saveDb(DEFAULT_DB);
       return DEFAULT_DB;
-    }
-
-    // Ensure all default profiles from DEFAULT_DB exist in the database (preserving existing ones)
-    let needsResave = false;
-    DEFAULT_DB.profiles.forEach(defProfile => {
-      const matchEmail = defProfile.email ? defProfile.email.toLowerCase().trim() : '';
-      if (!matchEmail) return;
-      const exists = schema.profiles.some(p => p.email && p.email.toLowerCase().trim() === matchEmail);
-      if (!exists) {
-        schema.profiles.push(defProfile);
-        needsResave = true;
-      }
-    });
-
-    // Make sure we also have default electricity rates
-    if (schema.electricity_rates.length === 0 && DEFAULT_DB.electricity_rates.length > 0) {
-      schema.electricity_rates = [...DEFAULT_DB.electricity_rates];
-      needsResave = true;
-    }
-
-    // Seed missing token purchases for default tenants
-    DEFAULT_DB.token_purchases.forEach(defPurchase => {
-      const exists = schema.token_purchases.some(p => p.id === defPurchase.id);
-      if (!exists) {
-        schema.token_purchases.push(defPurchase);
-        needsResave = true;
-      }
-    });
-
-    // Seed missing meter readings for default tenants
-    DEFAULT_DB.meter_readings.forEach(defReading => {
-      const exists = schema.meter_readings.some(r => r.id === defReading.id);
-      if (!exists) {
-        schema.meter_readings.push(defReading);
-        needsResave = true;
-      }
-    });
-
-    // Seed missing water contributions for default tenants
-    DEFAULT_DB.water_contributions.forEach(defContribution => {
-      const exists = schema.water_contributions.some(c => c.id === defContribution.id);
-      if (!exists) {
-        schema.water_contributions.push(defContribution);
-        needsResave = true;
-      }
-    });
-
-    // Seed missing payments for default tenants
-    DEFAULT_DB.payments.forEach(defPayment => {
-      const exists = schema.payments.some(p => p.id === defPayment.id);
-      if (!exists) {
-        schema.payments.push(defPayment);
-        needsResave = true;
-      }
-    });
-
-    // Seed missing deposits for default tenants
-    DEFAULT_DB.deposits.forEach(defDeposit => {
-      const exists = schema.deposits.some(d => d.id === defDeposit.id);
-      if (!exists) {
-        schema.deposits.push(defDeposit);
-        needsResave = true;
-      }
-    });
-
-    if (needsResave) {
-      console.log('Seeding missing default records to Firestore database...');
-      await saveDb(schema);
     }
 
     return schema;

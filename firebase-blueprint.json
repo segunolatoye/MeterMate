@@ -110,6 +110,20 @@
         "created_at": { "type": "string" }
       },
       "required": ["id", "tenant_id", "amount", "refunded", "note", "created_at"]
+    },
+    "PushSubscription": {
+      "title": "PushSubscription",
+      "description": "Browser push notification subscriptions for occupants",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "endpoint": { "type": "string" },
+        "p256dh": { "type": "string" },
+        "auth": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "user_id", "endpoint", "p256dh", "auth", "created_at"]
     }
   },
   "firestore": {
@@ -140,6 +154,10 @@
     "/deposits/{depositId}": {
       "schema": { "$ref": "#/entities/Deposit" },
       "description": "Ledger entries of primary security deposits"
+    },
+    "/push_subscriptions/{subscriptionId}": {
+      "schema": { "$ref": "#/entities/PushSubscription" },
+      "description": "Database of registered browser push targets"
     }
   }
 }
