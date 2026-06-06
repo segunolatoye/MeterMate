@@ -113,8 +113,8 @@ export default function PayClientView({
         </label>
         <div className="grid grid-cols-3 gap-2" id="utility-payment-category-tabs">
           
-          {/* Electricity Option (only if electricity tenant) */}
-          {user.role === 'electricity_tenant' ? (
+          {/* Electricity Option (only if electricity tenant or admin/office) */}
+          {user.role === 'electricity_tenant' || user.role === 'admin' ? (
             <button
               id="tab-pay-electricity"
               type="button"

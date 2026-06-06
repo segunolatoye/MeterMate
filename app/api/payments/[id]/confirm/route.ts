@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, saveDb, getCurrentRate } from '@/lib/db';
+import { getDb, saveDb, getCurrentRate, db as firestoreDb } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 import { notifyUser } from '@/lib/notifications';
+import { doc, setDoc } from 'firebase/firestore';
 
 export async function PATCH(
   req: NextRequest,
@@ -112,6 +113,18 @@ export async function PATCH(
         title: 'Payment Confirmed! ✅',
         body: notifyBody,
         url: '/dashboard'
+      });
+
+      // Save notification to historical logs
+      const notificationId = 'notif_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      await setDoc(doc(firestoreDb, 'notifications', notificationId), {
+        id: notificationId,
+        title: 'Payment Confirmed! ✅',
+        body: notifyBody,
+        url: '/dashboard',
+        created_at: new Date().toISOString(),
+        sender_id: caller.id,
+        target: tId
       });
     } catch (notifyErr) {
       console.error('Failed to dispatch payment confirmation notification:', notifyErr);

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, saveDb } from '@/lib/db';
+import { getDb, saveDb, db as firestoreDb } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 import { WaterContribution } from '@/lib/types';
 import { notifyAllOccupants } from '@/lib/notifications';
+import { doc, setDoc } from 'firebase/firestore';
 
 export async function POST(
   req: NextRequest,
@@ -60,10 +61,24 @@ export async function POST(
         const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
         const monthLabel = dateObj.toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
+        const notifyBody = `The water levy of ₦3,000 for ${monthLabel} has been posted. Please log in to complete your payment.`;
+
         await notifyAllOccupants({
           title: 'New Water Levy Posted! 💧',
-          body: `The water levy of ₦3,000 for ${monthLabel} has been posted. Please log in to complete your payment.`,
+          body: notifyBody,
           url: '/dashboard'
+        });
+
+        // Save notification to historical logs
+        const notificationId = 'notif_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+        await setDoc(doc(firestoreDb, 'notifications', notificationId), {
+          id: notificationId,
+          title: 'New Water Levy Posted! 💧',
+          body: notifyBody,
+          url: '/dashboard',
+          created_at: new Date().toISOString(),
+          sender_id: caller.id,
+          target: 'all'
         });
       } catch (notifyErr) {
         console.error('Failed to notify occupants about new water levy:', notifyErr);

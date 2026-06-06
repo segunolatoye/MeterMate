@@ -11,8 +11,8 @@ export default async function AdminWaterPage() {
 
   const db = await getDb();
   
-  // All occupants excluding admin
-  const occupants = db.profiles.filter(p => p.role !== 'admin');
+  // All occupants including admin
+  const occupants = db.profiles;
   const contributions = db.water_contributions;
 
   return (

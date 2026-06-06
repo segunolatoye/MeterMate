@@ -11,7 +11,7 @@ export default async function AdminTenantsPage() {
   }
 
   const db = await getDb();
-  const rawTenants = db.profiles.filter(p => p.role !== 'admin');
+  const rawTenants = db.profiles;
 
   const tenants = rawTenants.map(tenant => {
     // Generate unified balance and status calculations for each tenant

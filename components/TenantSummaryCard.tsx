@@ -1,5 +1,7 @@
-import React from 'react';
-import { Zap, Droplets, ShieldCheck, TrendingDown, RefreshCcw } from 'lucide-react';
+'use client';
+
+import React, { useState } from 'react';
+import { Zap, Droplets, ShieldCheck, TrendingDown, RefreshCcw, AlertTriangle, Coins, CheckCircle, Flame } from 'lucide-react';
 import { TenantSummary } from '@/lib/calculations';
 
 interface TenantSummaryCardProps {
@@ -25,16 +27,56 @@ export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: 
     return '₦' + Math.abs(val).toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
   };
 
+  const [isApplying, setIsApplying] = useState(false);
+  const [applyError, setApplyError] = useState<string | null>(null);
+  const [applySuccess, setApplySuccess] = useState<string | null>(null);
+
+  const handleApplyDeposit = async (target: 'electricity' | 'water', applyAmount: number) => {
+    if (applyAmount <= 0) return;
+    setIsApplying(true);
+    setApplyError(null);
+    setApplySuccess(null);
+    try {
+      const res = await fetch('/api/payments/apply-deposit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tenant_id: profile.id,
+          target_utility: target,
+          amount: applyAmount,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to apply deposit.');
+      }
+      setApplySuccess(`Succeeded! Applied ${formatNaira(applyAmount)} from Escrow Deposit.`);
+      
+      // Delay reload to show success message
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (err: any) {
+      setApplyError(err.message || 'Error executing application.');
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const isDepositDeficit = electricityBalance < 0 && depositHeld < Math.abs(electricityBalance);
+
   return (
     <div className="flex flex-col gap-4" id="tenant-summary-wrapper-card">
       {/* Header Profile / welcome segment */}
       <div className="flex justify-between items-center px-1">
         <div>
-          <span className="text-[10px] font-mono tracking-wider font-bold text-slate-550 uppercase">
+          <span className="text-[10px] font-mono tracking-wider font-bold text-slate-500 uppercase">
             Active Residence
           </span>
           <h2 className="text-lg font-bold text-slate-100 flex items-center gap-1.5 leading-none mt-0.5" id="tenant-summary-room-label">
-            {profile.room_label} <span className="text-slate-705 font-normal">|</span> <span className="text-xs font-semibold text-slate-400">{profile.full_name}</span>
+            {profile.room_label} <span className="text-slate-700 font-normal">|</span> <span className="text-xs font-semibold text-slate-400">{profile.full_name}</span>
           </h2>
         </div>
         {onRefresh && (
@@ -49,10 +91,24 @@ export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: 
         )}
       </div>
 
+      {applyError && (
+        <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2" id="deposit-action-error-box">
+          <AlertTriangle className="h-4 w-4 shrink-0" />
+          <span>{applyError}</span>
+        </div>
+      )}
+
+      {applySuccess && (
+        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl flex items-center gap-2" id="deposit-action-success-box">
+          <CheckCircle className="h-4 w-4 shrink-0 animate-pulse" />
+          <span>{applySuccess}</span>
+        </div>
+      )}
+
       {/* Grid of Key Financial metrics */}
       <div className="grid grid-cols-2 gap-3.5">
         
-        {/* Metric 1: Electricity Balance (Only for Electricity tenants) */}
+        {/* Metric 1: Electricity Balance (Only for Electricity tenants & Admins acting as tenant) */}
         {isElectricityTenant && (
           <div className="col-span-2 bg-slate-950 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden shadow-sm" id="card-electricity-balance">
             {/* Ambient indicator glow */}
@@ -74,11 +130,46 @@ export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: 
               </span>
             </div>
             
-            <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
+            <p className="text-[11px] text-slate-404 mt-2 leading-relaxed">
               {electricityBalance >= 0 
                 ? 'Your prepaid utility reserve is safe and active.' 
-                : 'Please verify payment instructions below to resolve arrears.'}
+                : 'Your post-paid usage has exceeded previous prepayments. Balance is negative.'}
             </p>
+
+            {/* Deposit-Deficit Arrears Compliance Badge */}
+            {isDepositDeficit && (
+              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] rounded-xl flex flex-col gap-1.5" id="deposit-deficit-warning">
+                <span className="font-extrabold text-xs uppercase flex items-center gap-1">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-red-450" />
+                  Security Deposit Deficit!
+                </span>
+                <span>
+                  Your held Escrow Deposit ({formatNaira(depositHeld)}) is smaller than your outstanding electricity arrears. Please submit an additional deposit top-up of at least <strong>{formatNaira(Math.abs(electricityBalance) - depositHeld)}</strong> immediately.
+                </span>
+              </div>
+            )}
+
+            {/* Deposit Held settlement helper box if there are arrears but covered by escrow */}
+            {electricityBalance < 0 && !isDepositDeficit && depositHeld > 0 && (
+              <div className="mt-4 p-3 bg-slate-900 border border-emerald-500/20 text-[11px] rounded-xl flex flex-col gap-2" id="deposit-covered-helper">
+                <span className="font-bold text-slate-200 flex items-center gap-1.5">
+                  <Coins className="h-4 w-4 text-emerald-400 animate-bounce" />
+                  Settle Arrears via Escrow
+                </span>
+                <p className="text-slate-400 leading-tight">
+                  You have <strong>{formatNaira(depositHeld)}</strong> held in escrow. Use a portion of this deposit to clear your <strong>{formatNaira(electricityBalance)}</strong> arrears instantly.
+                </p>
+                <button
+                  type="button"
+                  id="apply-deposit-power-btn"
+                  disabled={isApplying}
+                  onClick={() => handleApplyDeposit('electricity', Math.abs(electricityBalance))}
+                  className="w-full py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold tracking-tight rounded-lg text-xs cursor-pointer select-none transition-colors"
+                >
+                  {isApplying ? 'Processing Settle...' : `Apply ${formatNaira(electricityBalance)} from Escrow`}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -91,7 +182,7 @@ export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: 
             </div>
             <div>
               <span className="text-xl font-extrabold text-slate-100 block tracking-tight leading-none">
-                {remainingUnitsEstimate.toFixed(1)} <span className="text-xs font-normal text-slate-550">kWh</span>
+                {remainingUnitsEstimate.toFixed(1)} <span className="text-xs font-normal text-slate-600">kWh</span>
               </span>
               <span className="text-[10px] text-slate-400 block mt-1.5 leading-tight">
                 Est. units remaining
@@ -133,7 +224,7 @@ export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: 
                 {outstandingWaterAmount === 0 ? '₦0' : formatNaira(outstandingWaterAmount)}
               </span>
               {outstandingWaterAmount > 0 && (
-                <span className="text-[10px] text-amber-405 font-bold uppercase font-mono px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                <span className="text-[10px] text-amber-400 font-bold uppercase font-mono px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 animate-pulse">
                   {summary.outstandingWaterCount} month{summary.outstandingWaterCount > 1 ? 's' : ''} unpaid
                 </span>
               )}
@@ -151,6 +242,28 @@ export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: 
               ? 'Thank you! Your water pump contributions are fully paid.' 
               : 'Flat-rate of ₦3,000/month for borehole and central generator fuel.'}
           </p>
+
+          {/* Settle water using security deposit */}
+          {outstandingWaterAmount > 0 && depositHeld > 0 && (
+            <div className="mt-4 p-3 bg-slate-900 border border-emerald-500/20 text-[11px] rounded-xl flex flex-col gap-2" id="deposit-water-helper-box">
+              <span className="font-bold text-slate-205 flex items-center gap-1.5">
+                <Coins className="h-4 w-4 text-emerald-400" />
+                Settle Levy via Escrow
+              </span>
+              <p className="text-slate-400 leading-tight">
+                Instantly clear your outstanding water pump levy of <strong>{formatNaira(outstandingWaterAmount)}</strong> using your escrow deposit.
+              </p>
+              <button
+                type="button"
+                id="apply-deposit-water-btn"
+                disabled={isApplying}
+                onClick={() => handleApplyDeposit('water', Math.min(depositHeld, outstandingWaterAmount))}
+                className="w-full py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold tracking-tight rounded-lg text-xs cursor-pointer select-none transition-colors"
+              >
+                {isApplying ? 'Processing Settle...' : `Apply ${formatNaira(Math.min(depositHeld, outstandingWaterAmount))} from Escrow`}
+              </button>
+            </div>
+          )}
         </div>
 
       </div>
