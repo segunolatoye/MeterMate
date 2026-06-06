@@ -1,0 +1,110 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { getDb, saveDb, getCurrentRate } from '@/lib/db';
+import { getSessionUser } from '@/lib/auth';
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const caller = await getSessionUser();
+    if (!caller || caller.role !== 'admin') {
+      return NextResponse.json({ message: 'Unauthorized. Admins only.' }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const { action } = await req.json(); // e.g. "confirm" or "reject"
+
+    const db = await getDb();
+    const payment = db.payments.find(p => p.id === id);
+
+    if (!payment) {
+      return NextResponse.json({ message: 'Target payment record not found.' }, { status: 404 });
+    }
+
+    if (payment.status !== 'pending') {
+      return NextResponse.json({ message: 'This payment has already been audited or resolved.' }, { status: 400 });
+    }
+
+    if (action === 'reject') {
+      payment.status = 'failed';
+      payment.note = `${payment.note} | Rejected by Admin (${caller.full_name})`;
+      await saveDb(db);
+      return NextResponse.json({ success: true, message: 'Transfer receipt rejected.', payment });
+    }
+
+    // Action is Confirm
+    payment.status = 'confirmed';
+    payment.confirmed_by = caller.id;
+    payment.note = `${payment.note} | Confirmed by Admin (${caller.full_name})`;
+
+    const pType = payment.payment_type;
+    const tId = payment.tenant_id;
+
+    // Apply ledger updates
+    if (pType === 'water') {
+      const oldestPendingWater = db.water_contributions
+        .filter(wc => wc.tenant_id === tId && wc.status === 'pending')
+        .sort((a, b) => a.month.localeCompare(b.month));
+
+      if (oldestPendingWater.length > 0) {
+        const targetWc = db.water_contributions.find(wc => wc.id === oldestPendingWater[0].id);
+        if (targetWc) {
+          targetWc.status = 'paid';
+          targetWc.payment_id = payment.id;
+        }
+      }
+    } 
+    else if (pType === 'deposit') {
+      db.deposits.push({
+        id: `dep-${Date.now()}`,
+        tenant_id: tId,
+        amount: payment.amount,
+        refunded: false,
+        note: `Manual confirmed bank transfer deposit`,
+        created_at: new Date().toISOString()
+      });
+
+      const tenantProf = db.profiles.find(p => p.id === tId);
+      if (tenantProf) {
+        tenantProf.deposit_amount = (Number(tenantProf.deposit_amount) || 0) + payment.amount;
+      }
+    } 
+    else if (pType === 'electricity' || pType === 'prepayment') {
+      const currentRate = await getCurrentRate();
+      const unitsReceived = payment.amount / currentRate;
+      const pin = [
+        Math.floor(1000 + Math.random() * 9000),
+        Math.floor(1000 + Math.random() * 9000),
+        Math.floor(1000 + Math.random() * 9000),
+        Math.floor(1000 + Math.random() * 9000),
+      ].join('-');
+
+      db.token_purchases.push({
+        id: `purchase-auto-tran-${Date.now()}`,
+        tenant_id: tId,
+        date: new Date().toISOString().split('T')[0],
+        amount_paid: payment.amount,
+        units_received: unitsReceived,
+        rate_at_time: currentRate,
+        token_ref: pin,
+        created_by: caller.id,
+        created_at: new Date().toISOString()
+      });
+
+      payment.note = `${payment.note} | Generated token: ${unitsReceived.toFixed(1)} kWh (Pin: ${pin})`;
+    }
+
+    await saveDb(db);
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Transfer payment has been audited, confirmed, and utilities adjusted.', 
+      payment 
+    });
+
+  } catch (err: any) {
+    console.error('Error confirming payment:', err);
+    return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
+  }
+}

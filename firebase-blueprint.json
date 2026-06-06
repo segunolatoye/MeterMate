@@ -1,0 +1,145 @@
+{
+  "entities": {
+    "Profile": {
+      "title": "Profile",
+      "description": "User profile containing identity, contact details, role, and room allocation",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "full_name": { "type": "string" },
+        "phone": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "electricity_tenant", "water_only_tenant"] },
+        "room_label": { "type": "string" },
+        "meter_id": { "type": "string" },
+        "deposit_amount": { "type": "number" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "email", "full_name", "phone", "role", "room_label", "deposit_amount", "created_at"]
+    },
+    "ElectricityRate": {
+      "title": "ElectricityRate",
+      "description": "Electricity tariff rates configured by administrators",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "rate_per_kwh": { "type": "number" },
+        "effective_from": { "type": "string" },
+        "note": { "type": "string" },
+        "created_by": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "rate_per_kwh", "effective_from", "note", "created_by", "created_at"]
+    },
+    "TokenPurchase": {
+      "title": "TokenPurchase",
+      "description": "Token purchase details for prepayments",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenant_id": { "type": "string" },
+        "date": { "type": "string" },
+        "amount_paid": { "type": "number" },
+        "units_received": { "type": "number" },
+        "rate_at_time": { "type": "number" },
+        "token_ref": { "type": "string" },
+        "created_by": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "tenant_id", "date", "amount_paid", "units_received", "rate_at_time", "token_ref", "created_by", "created_at"]
+    },
+    "MeterReading": {
+      "title": "MeterReading",
+      "description": "Electricity meter reading recordings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenant_id": { "type": "string" },
+        "reading_date": { "type": "string" },
+        "reading_kwh": { "type": "number" },
+        "notes": { "type": "string" },
+        "created_by": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "tenant_id", "reading_date", "reading_kwh", "notes", "created_by", "created_at"]
+    },
+    "WaterContribution": {
+      "title": "WaterContribution",
+      "description": "Shared water pumping utility monthly contribution status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenant_id": { "type": "string" },
+        "month": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "paid", "waived"] },
+        "payment_id": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "tenant_id", "month", "amount", "status", "created_at"]
+    },
+    "Payment": {
+      "title": "Payment",
+      "description": "Log of utility payments and prepayment transactions",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenant_id": { "type": "string" },
+        "amount": { "type": "number" },
+        "payment_type": { "type": "string", "enum": ["electricity", "water", "deposit", "prepayment"] },
+        "payment_method": { "type": "string", "enum": ["paystack_card", "paystack_transfer", "manual"] },
+        "paystack_reference": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "failed"] },
+        "confirmed_by": { "type": "string" },
+        "note": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "tenant_id", "amount", "payment_type", "payment_method", "paystack_reference", "status", "note", "created_at"]
+    },
+    "Deposit": {
+      "title": "Deposit",
+      "description": "Tenant security deposit records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenant_id": { "type": "string" },
+        "amount": { "type": "number" },
+        "refunded": { "type": "boolean" },
+        "refunded_at": { "type": "string" },
+        "note": { "type": "string" },
+        "created_at": { "type": "string" }
+      },
+      "required": ["id", "tenant_id", "amount", "refunded", "note", "created_at"]
+    }
+  },
+  "firestore": {
+    "/profiles/{profileId}": {
+      "schema": { "$ref": "#/entities/Profile" },
+      "description": "Storage location for tenant and admin user accounts"
+    },
+    "/electricity_rates/{rateId}": {
+      "schema": { "$ref": "#/entities/ElectricityRate" },
+      "description": "Active and historic electricity billing tariffs"
+    },
+    "/token_purchases/{purchaseId}": {
+      "schema": { "$ref": "#/entities/TokenPurchase" },
+      "description": "Electricity prepaid tokens"
+    },
+    "/meter_readings/{readingId}": {
+      "schema": { "$ref": "#/entities/MeterReading" },
+      "description": "Regular electricity meter reads to track usage"
+    },
+    "/water_contributions/{contributionId}": {
+      "schema": { "$ref": "#/entities/WaterContribution" },
+      "description": "Monthly payments ledger for the shared water pump"
+    },
+    "/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/Payment" },
+      "description": "Master list of all user payments"
+    },
+    "/deposits/{depositId}": {
+      "schema": { "$ref": "#/entities/Deposit" },
+      "description": "Ledger entries of primary security deposits"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "MeterMate",
+  "description": "Progressive Web App for managing shared electricity and water pump costs in a residential compound.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
