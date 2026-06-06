@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     const db = await getDb();
-    const exists = db.profiles.some(p => p.email.toLowerCase() === email.toLowerCase().trim());
+    const exists = db.profiles.some(p => p.email && p.email.toLowerCase() === email.toLowerCase().trim());
     if (exists) {
       return NextResponse.json({ message: 'A profile with this email address already exists.' }, { status: 409 });
     }

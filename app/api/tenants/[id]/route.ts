@@ -29,8 +29,8 @@ export async function PATCH(
     const profile = db.profiles[profileIndex];
 
     // Check email uniqueness if email has changed
-    if (profile.email.toLowerCase() !== email.toLowerCase().trim()) {
-      const emailExists = db.profiles.some(p => p.id !== id && p.email.toLowerCase() === email.toLowerCase().trim());
+    if (profile.email && profile.email.toLowerCase() !== email.toLowerCase().trim()) {
+      const emailExists = db.profiles.some(p => p.id !== id && p.email && p.email.toLowerCase() === email.toLowerCase().trim());
       if (emailExists) {
         return NextResponse.json({ message: 'Another profile with this email address already exists.' }, { status: 409 });
       }

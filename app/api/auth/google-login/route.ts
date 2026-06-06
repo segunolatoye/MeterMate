@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
 
     const db = await getDb();
     const trimmedEmail = email.trim().toLowerCase();
-    const user = db.profiles.find(p => p.email.toLowerCase() === trimmedEmail);
+    const user = db.profiles.find(p => p.email && p.email.toLowerCase() === trimmedEmail);
 
     if (!user) {
       return NextResponse.json({ 

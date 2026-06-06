@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
     const db = await getDb();
     // Case-insensitive match for email
     const trimmedEmail = email.trim().toLowerCase();
-    const user = db.profiles.find(p => p.email.toLowerCase() === trimmedEmail);
+    const user = db.profiles.find(p => p.email && p.email.toLowerCase() === trimmedEmail);
 
     if (!user) {
       return NextResponse.json({ message: 'User profile not found.' }, { status: 404 });

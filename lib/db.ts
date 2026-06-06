@@ -403,6 +403,74 @@ export async function getDb(): Promise<DatabaseSchema> {
       return DEFAULT_DB;
     }
 
+    // Ensure all default profiles from DEFAULT_DB exist in the database (preserving existing ones)
+    let needsResave = false;
+    DEFAULT_DB.profiles.forEach(defProfile => {
+      const matchEmail = defProfile.email ? defProfile.email.toLowerCase().trim() : '';
+      if (!matchEmail) return;
+      const exists = schema.profiles.some(p => p.email && p.email.toLowerCase().trim() === matchEmail);
+      if (!exists) {
+        schema.profiles.push(defProfile);
+        needsResave = true;
+      }
+    });
+
+    // Make sure we also have default electricity rates
+    if (schema.electricity_rates.length === 0 && DEFAULT_DB.electricity_rates.length > 0) {
+      schema.electricity_rates = [...DEFAULT_DB.electricity_rates];
+      needsResave = true;
+    }
+
+    // Seed missing token purchases for default tenants
+    DEFAULT_DB.token_purchases.forEach(defPurchase => {
+      const exists = schema.token_purchases.some(p => p.id === defPurchase.id);
+      if (!exists) {
+        schema.token_purchases.push(defPurchase);
+        needsResave = true;
+      }
+    });
+
+    // Seed missing meter readings for default tenants
+    DEFAULT_DB.meter_readings.forEach(defReading => {
+      const exists = schema.meter_readings.some(r => r.id === defReading.id);
+      if (!exists) {
+        schema.meter_readings.push(defReading);
+        needsResave = true;
+      }
+    });
+
+    // Seed missing water contributions for default tenants
+    DEFAULT_DB.water_contributions.forEach(defContribution => {
+      const exists = schema.water_contributions.some(c => c.id === defContribution.id);
+      if (!exists) {
+        schema.water_contributions.push(defContribution);
+        needsResave = true;
+      }
+    });
+
+    // Seed missing payments for default tenants
+    DEFAULT_DB.payments.forEach(defPayment => {
+      const exists = schema.payments.some(p => p.id === defPayment.id);
+      if (!exists) {
+        schema.payments.push(defPayment);
+        needsResave = true;
+      }
+    });
+
+    // Seed missing deposits for default tenants
+    DEFAULT_DB.deposits.forEach(defDeposit => {
+      const exists = schema.deposits.some(d => d.id === defDeposit.id);
+      if (!exists) {
+        schema.deposits.push(defDeposit);
+        needsResave = true;
+      }
+    });
+
+    if (needsResave) {
+      console.log('Seeding missing default records to Firestore database...');
+      await saveDb(schema);
+    }
+
     return schema;
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, 'database_schema');
