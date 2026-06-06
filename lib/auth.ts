@@ -13,7 +13,14 @@ export async function getSessionUser(): Promise<Profile | null> {
     const db = await getDb();
     const user = db.profiles.find(p => p.id === sessionId);
     return user || null;
-  } catch (err) {
+  } catch (err: any) {
+    if (err && (
+      err.digest === 'DYNAMIC_SERVER_USAGE' ||
+      err.message?.includes('Dynamic server usage') ||
+      err.name === 'DynamicServerError'
+    )) {
+      throw err;
+    }
     console.error('Error fetching session user:', err);
     return null;
   }
