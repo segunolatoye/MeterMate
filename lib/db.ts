@@ -300,7 +300,7 @@ export async function deleteProfile(profileId: string): Promise<void> {
     dbSchema.deposits = dbSchema.deposits.filter(d => d.tenant_id !== profileId);
 
     // Build the collection of Firestore deleteDoc calls
-    const promises: Promise<void>[] = [];
+    const promises: Promise<any>[] = [];
     promises.push(db.collection('profiles').doc(profileId).delete());
     readingIds.forEach(id => promises.push(db.collection('meter_readings').doc(id).delete()));
     purchaseIds.forEach(id => promises.push(db.collection('token_purchases').doc(id).delete()));
