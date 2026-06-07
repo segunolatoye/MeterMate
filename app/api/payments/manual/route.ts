@@ -57,6 +57,24 @@ export async function POST(req: NextRequest) {
           }
         }
       }
+
+      if (remainingAmount > 0) {
+        // Push remainder to escrow
+        const depId = `dep-${Date.now()}`;
+        db.deposits.push({
+          id: depId,
+          tenant_id,
+          amount: remainingAmount,
+          refunded: false,
+          note: `Auto-credited excess water payment overage`,
+          created_at: new Date().toISOString()
+        });
+        
+        const tenantProf = db.profiles.find(p => p.id === tenant_id);
+        if (tenantProf) {
+          tenantProf.deposit_amount = (Number(tenantProf.deposit_amount) || 0) + remainingAmount;
+        }
+      }
     } 
     else if (payment_type === 'deposit') {
       db.deposits.push({

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { LogOut, User, Landmark, HelpCircle, Phone, Mail, MapPin, Cpu, ShieldAlert, Lock, Key, CheckCircle, AlertCircle } from 'lucide-react';
 import { Profile } from '@/lib/types';
 import { TenantSummary } from '@/lib/calculations';
+import DevicePushSetup from '@/components/DevicePushSetup';
 
 interface ProfileClientViewProps {
   user: Profile;
@@ -233,7 +234,8 @@ export default function ProfileClientView({ user, summary }: ProfileClientViewPr
         </form>
       </div>
 
-
+      {/* Push Setup Component */}
+      <DevicePushSetup userId={user.id} />
 
       {/* Log out Button */}
       <button

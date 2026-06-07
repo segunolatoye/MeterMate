@@ -49,35 +49,34 @@ export default async function TenantDashboardPage() {
   const generateUsageHistory = () => {
     const history = [];
     const now = new Date();
-    const allReadings = [...(summary?.readings || [])].sort((a, b) => 
-      new Date(a.reading_date).getTime() - new Date(b.reading_date).getTime()
+    
+    // Accumulation of all confirmed electricity payments from all tenants
+    const allPayments = db.payments.filter(p => 
+      p.status === 'confirmed' && 
+      (p.payment_type === 'electricity' || p.payment_type === 'prepayment')
     );
-
-    const getMaxReadingUpTo = (date: Date) => {
-      const valid = allReadings.filter(r => new Date(r.reading_date) <= date);
-      if (valid.length === 0) return 0;
-      return Math.max(...valid.map(v => Number(v.reading_kwh)));
-    };
 
     for (let i = 5; i >= 0; i--) {
       const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const label = targetDate.toLocaleString('en-US', { month: 'short' });
       
-      const endOfThisMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
-      const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - i, 0, 23, 59, 59);
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
       
-      const maxThis = getMaxReadingUpTo(endOfThisMonth);
-      const maxPrev = getMaxReadingUpTo(endOfPrevMonth);
+      const monthPayments = allPayments.filter(p => {
+        const d = new Date(p.created_at);
+        return d >= startOfMonth && d <= endOfMonth;
+      });
       
-      const kwh = Math.max(0, maxThis - maxPrev);
-      history.push({ label, kwh });
+      const amount = monthPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+      history.push({ label, amount });
     }
     return history;
   };
 
   const usageHistory = generateUsageHistory();
 
-  const maxKwh = Math.max(...usageHistory.map(h => h.kwh), 150);
+  const maxAmount = Math.max(...usageHistory.map(h => h.amount), 1000);
 
   const userInitials = user.full_name
     ? user.full_name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
@@ -156,13 +155,13 @@ export default async function TenantDashboardPage() {
           <div className="bg-slate-950 rounded-xl p-4 border border-slate-800/60 flex flex-col items-center justify-center">
             <div className="w-full flex justify-between items-end h-32 gap-3 px-1 mt-2">
               {usageHistory.map((item) => {
-                const heightPercent = (item.kwh / maxKwh) * 100;
+                const heightPercent = (item.amount / maxAmount) * 100;
                 const isCurrentMonth = item.label === new Date().toLocaleString('en-US', { month: 'short' });
                 return (
                   <div key={item.label} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
                     {/* Hover detail value bubble */}
-                    <span className="text-[9px] font-bold font-mono text-slate-300 bg-slate-905 border border-slate-800 shadow-sm py-0.5 px-1.5 rounded-lg">
-                      {item.kwh}
+                    <span className="text-[8px] font-bold font-mono text-slate-300 bg-slate-905 border border-slate-800 shadow-sm py-0.5 px-1 rounded-lg truncate max-w-[40px] text-center" title={`₦${item.amount.toLocaleString()}`}>
+                      {item.amount >= 1000 ? `₦${(item.amount / 1000).toFixed(1)}k` : `₦${item.amount}`}
                     </span>
                     {/* The bar element */}
                     <div 
@@ -178,7 +177,7 @@ export default async function TenantDashboardPage() {
               })}
             </div>
             <div className="w-full text-center text-[9px] font-mono text-slate-500 border-t border-slate-800/60 pt-2.5 mt-2.5">
-              Unit metric: Kilowatt-Hours (kWh) logged per month
+              Unit metric: Total Compound Electricity Payments (₦) per month
             </div>
           </div>
         </div>

@@ -333,7 +333,7 @@ export default function TenantSummaryCard({ summary, waterPoolSummary, globalSet
           </p>
 
           {/* Settle water using security deposit */}
-          {outstandingWaterAmount > 0 && depositHeld > 0 && (
+          {outstandingWaterAmount > 0 && depositHeld >= outstandingWaterAmount && (
             <div className="mt-4 p-3 bg-slate-900 border border-emerald-500/20 text-[11px] rounded-xl flex flex-col gap-2" id="deposit-water-helper-box">
               <span className="font-bold text-slate-205 flex items-center gap-1.5">
                 <Coins className="h-4 w-4 text-emerald-400" />
@@ -346,10 +346,10 @@ export default function TenantSummaryCard({ summary, waterPoolSummary, globalSet
                 type="button"
                 id="apply-deposit-water-btn"
                 disabled={isApplying}
-                onClick={() => handleApplyDeposit('water', Math.min(depositHeld, outstandingWaterAmount))}
+                onClick={() => handleApplyDeposit('water', outstandingWaterAmount)}
                 className="w-full py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold tracking-tight rounded-lg text-xs cursor-pointer select-none transition-colors"
               >
-                {isApplying ? 'Processing Settle...' : `Apply ${formatNaira(Math.min(depositHeld, outstandingWaterAmount))} from Escrow`}
+                {isApplying ? 'Processing Settle...' : `Apply ${formatNaira(outstandingWaterAmount)} from Escrow`}
               </button>
             </div>
           )}

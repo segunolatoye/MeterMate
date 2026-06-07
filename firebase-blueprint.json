@@ -12,7 +12,7 @@
         "role": { "type": "string", "enum": ["admin", "electricity_tenant", "water_only_tenant"] },
         "room_label": { "type": "string" },
         "meter_id": { "type": "string" },
-        "deposit_amount": { "type": "number" },
+        "deposit_amount": { "type": "number", "format": "float" },
         "created_at": { "type": "string" }
       },
       "required": ["id", "email", "full_name", "phone", "role", "room_label", "deposit_amount", "created_at"]
@@ -23,7 +23,7 @@
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "rate_per_kwh": { "type": "number" },
+        "rate_per_kwh": { "type": "number", "format": "float" },
         "effective_from": { "type": "string" },
         "note": { "type": "string" },
         "created_by": { "type": "string" },
@@ -39,9 +39,9 @@
         "id": { "type": "string" },
         "tenant_id": { "type": "string" },
         "date": { "type": "string" },
-        "amount_paid": { "type": "number" },
-        "units_received": { "type": "number" },
-        "rate_at_time": { "type": "number" },
+        "amount_paid": { "type": "number", "format": "float" },
+        "units_received": { "type": "number", "format": "float" },
+        "rate_at_time": { "type": "number", "format": "float" },
         "token_ref": { "type": "string" },
         "created_by": { "type": "string" },
         "created_at": { "type": "string" }
@@ -56,7 +56,7 @@
         "id": { "type": "string" },
         "tenant_id": { "type": "string" },
         "reading_date": { "type": "string" },
-        "reading_kwh": { "type": "number" },
+        "reading_kwh": { "type": "number", "format": "float" },
         "notes": { "type": "string" },
         "created_by": { "type": "string" },
         "created_at": { "type": "string" }
@@ -71,7 +71,7 @@
         "id": { "type": "string" },
         "tenant_id": { "type": "string" },
         "month": { "type": "string" },
-        "amount": { "type": "number" },
+        "amount": { "type": "number", "format": "float" },
         "status": { "type": "string", "enum": ["pending", "paid", "waived"] },
         "payment_id": { "type": "string" },
         "created_at": { "type": "string" }
@@ -85,7 +85,7 @@
       "properties": {
         "id": { "type": "string" },
         "tenant_id": { "type": "string" },
-        "amount": { "type": "number" },
+        "amount": { "type": "number", "format": "float" },
         "payment_type": { "type": "string", "enum": ["electricity", "water", "deposit", "prepayment"] },
         "payment_method": { "type": "string", "enum": ["paystack_card", "paystack_transfer", "manual"] },
         "paystack_reference": { "type": "string" },
@@ -103,7 +103,7 @@
       "properties": {
         "id": { "type": "string" },
         "tenant_id": { "type": "string" },
-        "amount": { "type": "number" },
+        "amount": { "type": "number", "format": "float" },
         "refunded": { "type": "boolean" },
         "refunded_at": { "type": "string" },
         "note": { "type": "string" },

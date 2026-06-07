@@ -91,6 +91,24 @@ export async function POST(req: NextRequest) {
           break;
         }
       }
+
+      if (waterRemainingToPay > 0) {
+        // Refund remainder to escrow
+        const refundId = `dep-${Date.now()}`;
+        db.deposits.push({
+          id: refundId,
+          tenant_id,
+          amount: waterRemainingToPay,
+          refunded: false,
+          note: `Refunded unapplied escrow application overage`,
+          created_at: new Date().toISOString()
+        });
+        
+        const tenantProf = db.profiles.find(p => p.id === tenant_id);
+        if (tenantProf) {
+          tenantProf.deposit_amount = (Number(tenantProf.deposit_amount) || 0) + waterRemainingToPay;
+        }
+      }
     } else {
       // For electricity: since electricity balance is simple totalPayments - amountOwed,
       // adding the confirmed purchase / prepayment payment (which we did in step 2)

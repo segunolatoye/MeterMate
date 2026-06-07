@@ -488,6 +488,7 @@ export default function TenantDetailClientView({ summary }: TenantDetailClientVi
               <input
                 id="manual-pay-amount-input"
                 type="number"
+                step="any"
                 required
                 value={payAmount === 0 ? '' : payAmount}
                 onChange={(e) => setPayAmount(Number(e.target.value))}

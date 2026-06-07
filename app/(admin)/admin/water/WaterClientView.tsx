@@ -190,6 +190,7 @@ export default function WaterClientView({
             <input
               id="water-levy-amount-input"
               type="number"
+              step="any"
               required
               value={levyAmount}
               onChange={(e) => setLevyAmount(Number(e.target.value))}

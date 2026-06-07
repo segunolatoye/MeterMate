@@ -37,18 +37,39 @@ export async function POST(req: NextRequest) {
       const pType = payment.payment_type;
       const tId = payment.tenant_id;
 
-      // Type-specific automated state reconciliations
       if (pType === 'water') {
-        // Resolve oldest pending water contribution row
         const pendingWaterList = db.water_contributions
           .filter(wc => wc.tenant_id === tId && wc.status === 'pending')
           .sort((a, b) => a.month.localeCompare(b.month)); // Oldest first
 
-        if (pendingWaterList.length > 0) {
-          const targetWc = db.water_contributions.find(wc => wc.id === pendingWaterList[0].id);
-          if (targetWc) {
-            targetWc.status = 'paid';
-            targetWc.payment_id = payment.id;
+        let remainingAmount = verification.amountPaid;
+
+        for (const pending of pendingWaterList) {
+          if (remainingAmount >= pending.amount) {
+            const targetWc = db.water_contributions.find(wc => wc.id === pending.id);
+            if (targetWc) {
+              targetWc.status = 'paid';
+              targetWc.payment_id = payment.id;
+              remainingAmount -= pending.amount;
+            }
+          }
+        }
+
+        if (remainingAmount > 0) {
+          // Push remainder to escrow
+          const depId = `dep-${Date.now()}`;
+          db.deposits.push({
+            id: depId,
+            tenant_id: tId,
+            amount: remainingAmount,
+            refunded: false,
+            note: `Auto-credited excess water payment overage`,
+            created_at: new Date().toISOString()
+          });
+          
+          const tenantProf = db.profiles.find(p => p.id === tId);
+          if (tenantProf) {
+            tenantProf.deposit_amount = (Number(tenantProf.deposit_amount) || 0) + remainingAmount;
           }
         }
       } 

@@ -265,8 +265,9 @@ export default function ElectricityClientView({
                   <input
                     id="read-amount-input"
                     type="number"
+                    step="any"
                     required
-                    placeholder="e.g. 10250"
+                    placeholder="e.g. 10250.5"
                     value={readKwh === 0 ? '' : readKwh}
                     onChange={(e) => setReadKwh(Number(e.target.value))}
                     className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-xl py-2.5 px-3.5 text-xs text-white font-mono"

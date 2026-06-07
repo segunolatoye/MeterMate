@@ -233,14 +233,7 @@ export async function getDb(): Promise<DatabaseSchema> {
       await Promise.all(deletePromises);
     }
 
-    // Purge any 'reading-init-*' records from Firestore as they are no longer used
-    const initReadings = schema.meter_readings.filter(r => r.id.startsWith('reading-init-'));
-    if (initReadings.length > 0) {
-      console.log(`Purging ${initReadings.length} legacy 'reading-init' records...`);
-      const initDeletePromises = initReadings.map(r => deleteDoc(doc(db, 'meter_readings', r.id)));
-      await Promise.all(initDeletePromises);
-      schema.meter_readings = schema.meter_readings.filter(r => !r.id.startsWith('reading-init-'));
-    }
+
 
     // If the database has no profiles, seed the database with defaults automatically
     if (schema.profiles.length === 0) {

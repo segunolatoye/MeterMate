@@ -27,6 +27,7 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
   const [roomLabel, setRoomLabel] = useState('');
   const [meterId, setMeterId] = useState('');
   const [depositAmount, setDepositAmount] = useState<number>(15000);
+  const [initialReading, setInitialReading] = useState<number | ''>('');
 
 
   const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +52,7 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
           room_label: roomLabel,
           meter_id: role === 'electricity_tenant' ? meterId : undefined,
           deposit_amount: depositAmount,
+          initial_reading: role === 'electricity_tenant' ? Number(initialReading) : undefined,
 
         }),
       });
@@ -197,7 +199,7 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
             {/* Custom Meter input segment (conditional on Role) */}
             {role === 'electricity_tenant' && (
               <>
-                <div className="grid grid-cols-2 gap-3 animate-fade-in">
+                <div className="grid grid-cols-3 gap-3 animate-fade-in">
                 <div>
                   <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-1">Sub-Meter ID</label>
                   <input
@@ -211,10 +213,24 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-1">Security Deposit (₦)</label>
+                  <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-1">Initial Reading</label>
+                  <input
+                    id="tenant-reading-input"
+                    type="number"
+                    step="any"
+                    placeholder="e.g. 1500.5"
+                    value={initialReading}
+                    onChange={(e) => setInitialReading(e.target.value ? Number(e.target.value) : '')}
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-xl py-2.5 px-3.5 text-xs text-white font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-1">Security Dep. (₦)</label>
                   <input
                     id="tenant-deposit-input"
                     type="number"
+                    step="any"
                     value={depositAmount}
                     onChange={(e) => setDepositAmount(Number(e.target.value))}
                     className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-xl py-2.5 px-3.5 text-xs text-white font-mono"

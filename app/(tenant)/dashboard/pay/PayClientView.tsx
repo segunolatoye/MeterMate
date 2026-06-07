@@ -34,8 +34,8 @@ export default function PayClientView({
   // Selected Utility type
   const [paymentType, setPaymentType] = useState<'electricity' | 'water' | 'deposit' | 'prepayment'>(initialPaymentType);
 
-  // Selected Method: card vs transfer
-  const [method, setMethod] = useState<'card' | 'transfer'>(
+  // Selected Method: card vs transfer vs escrow
+  const [method, setMethod] = useState<'card' | 'transfer' | 'escrow'>(
     initialMethod === 'transfer' ? 'transfer' : 'card'
   );
 
@@ -51,6 +51,43 @@ export default function PayClientView({
   });
 
   const [successStatus, setSuccessStatus] = useState<string | null>(null);
+  const [isProcessingEscrow, setIsProcessingEscrow] = useState(false);
+
+  const handleApplyEscrowDeposit = async () => {
+    setIsProcessingEscrow(true);
+    setSuccessStatus(null);
+    try {
+      const res = await fetch('/api/payments/apply-deposit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tenant_id: user.id,
+          target_utility: paymentType,
+          amount: amount,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to apply deposit.');
+      }
+
+      setSuccessStatus(`Success! Applied ₦${amount.toLocaleString()} from escrow to ${paymentType}.`);
+      router.refresh();
+
+      setTimeout(() => {
+        router.push('/dashboard/history');
+      }, 1500);
+    } catch (err: any) {
+      console.error('Error applying escrow deposit:', err);
+      setSuccessStatus(`Error: ${err.message}`);
+      setTimeout(() => setSuccessStatus(null), 3000);
+    } finally {
+      setIsProcessingEscrow(false);
+    }
+  };
 
   const handlePaymentTypeChange = (type: 'electricity' | 'water' | 'deposit' | 'prepayment') => {
     setPaymentType(type);
@@ -177,6 +214,7 @@ export default function PayClientView({
           <input
             id="billing-custom-amount-input"
             type="number"
+            step="any"
             required
             value={amount === 0 ? '' : amount}
             onChange={(e) => setAmount(Number(e.target.value))}
@@ -213,7 +251,7 @@ export default function PayClientView({
           3. Choose Payment Method
         </label>
         
-        <div className="bg-slate-900 p-1 border border-slate-800 rounded-xl grid grid-cols-2 gap-1 shadow-sm" id="payment-gateway-toggle-bar">
+        <div className={`bg-slate-900 p-1 border border-slate-800 rounded-xl grid ${summary.depositHeld > 0 && paymentType !== 'deposit' ? 'grid-cols-3' : 'grid-cols-2'} gap-1 shadow-sm`} id="payment-gateway-toggle-bar">
           <button
             id="toggle-pay-card"
             type="button"
@@ -239,6 +277,22 @@ export default function PayClientView({
           >
             Bank Transfer Log
           </button>
+
+          {summary.depositHeld > 0 && paymentType !== 'deposit' && (
+            <button
+              id="toggle-pay-escrow"
+              type="button"
+              onClick={() => setMethod('escrow')}
+              className={`py-2 rounded-lg text-xs font-bold cursor-pointer transition-all flex items-center justify-center gap-1.5 ${
+                method === 'escrow'
+                  ? 'bg-emerald-500 text-slate-950 shadow border border-emerald-500'
+                  : 'text-slate-500 hover:text-slate-300 hover:bg-slate-950/40'
+              }`}
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Escrow
+            </button>
+          )}
         </div>
       </div>
 
@@ -260,13 +314,32 @@ export default function PayClientView({
           paymentType={paymentType}
           onSuccess={handleCardSuccess}
         />
-      ) : (
+      ) : method === 'transfer' ? (
         <TransferForm
           defaultAmount={amount}
           paymentType={paymentType}
           onSubmitSuccess={handleTransferSuccess}
           bankDetails={bankDetails}
         />
+      ) : (
+        <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col gap-4 shadow-sm animate-fade-in" id="escrow-payment-form">
+          <div className="flex items-center gap-2 mb-2">
+            <ShieldCheck className="text-emerald-400 h-5 w-5" />
+            <h4 className="text-sm font-bold text-slate-200">Pay using Escrow Deposit</h4>
+          </div>
+          <p className="text-[11px] text-slate-400">
+            You currently have <strong>₦{summary.depositHeld.toLocaleString()}</strong> held in your escrow deposit.
+            {amount > summary.depositHeld && <span className="text-amber-400 block mt-1">Warning: Your selected amount exceeds your available escrow balance.</span>}
+          </p>
+          <button
+            type="button"
+            disabled={amount <= 0 || amount > summary.depositHeld || isProcessingEscrow}
+            onClick={handleApplyEscrowDeposit}
+            className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+          >
+            {isProcessingEscrow ? 'Processing...' : `Apply ₦${amount.toLocaleString()} from Escrow`}
+          </button>
+        </div>
       )}
     </div>
   );

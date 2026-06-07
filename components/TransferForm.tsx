@@ -138,6 +138,7 @@ export default function TransferForm({
           <input
             id="transfer-amount-input"
             type="number"
+            step="any"
             required
             placeholder="3000"
             value={amount === 0 ? '' : amount}

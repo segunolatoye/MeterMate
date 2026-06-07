@@ -4,6 +4,8 @@ import { getSessionUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { getAdminMetrics } from '@/lib/calculations';
 import UnitLossCard from '@/components/UnitLossCard';
+import BroadcastForm from '@/components/BroadcastForm';
+import DevicePushSetup from '@/components/DevicePushSetup';
 import { 
   Users, 
   Wallet, 
@@ -202,6 +204,12 @@ export default async function AdminDashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Broadcast Tools */}
+      <BroadcastForm />
+      
+      {/* Push Notification Setup */}
+      <DevicePushSetup userId={user.id} />
     </div>
   );
 }
