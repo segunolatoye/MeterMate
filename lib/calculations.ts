@@ -37,7 +37,6 @@ export function getTenantSummary(db: DatabaseSchema, tenantId: string): TenantSu
     const lastReading = Number(readings[readings.length - 1].reading_kwh);
     totalUsedUnits = Math.max(0, lastReading - firstReading);
   } else if (readings.length === 1) {
-    // If only 1 reading, used is 0 (as it's the baseline)
     totalUsedUnits = 0;
   }
 
@@ -153,6 +152,9 @@ export function getAdminMetrics(db: DatabaseSchema): AdminMetrics {
   const collectedThisMonth = db.payments
     .filter(p => {
       if (p.status !== 'confirmed') return false;
+      // Do not double-count internal ledger transfers from escrow deposits
+      if (p.paystack_reference && p.paystack_reference.startsWith('DEP_DRAWDOWN_')) return false;
+      
       const payDate = new Date(p.created_at);
       const payYearMonth = `${payDate.getFullYear()}-${String(payDate.getMonth() + 1).padStart(2, '0')}`;
       return payYearMonth === currentYearMonth;

@@ -103,8 +103,18 @@ export default function PaystackButton({
           setIsProcessing(false);
           onSuccess(response.reference);
         },
-        onClose: function () {
+        onClose: async function () {
           setIsProcessing(false);
+          // Ping the backend to cleanly delete the abandoned checkout record
+          try {
+            await fetch('/api/payments/cancel', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ reference })
+            });
+          } catch (err) {
+            console.error('Failed to notify backend of cancellation', err);
+          }
           if (onCancel) onCancel();
         },
       });
