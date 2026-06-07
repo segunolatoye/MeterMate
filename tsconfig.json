@@ -37,6 +37,12 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "fix-*.ts",
+    "seed-*.ts",
+    "restore-*.ts",
+    "print-*.ts",
+    "check-*.ts",
+    "sync-*.ts"
   ]
 }
