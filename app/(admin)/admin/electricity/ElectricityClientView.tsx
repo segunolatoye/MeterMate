@@ -43,11 +43,7 @@ export default function ElectricityClientView({
   const [readDate, setReadDate] = useState(new Date().toISOString().split('T')[0]);
   const [readNotes, setReadNotes] = useState('');
 
-  // GENERATE TOKEN FORM
-  const [tokTenantId, setTokTenantId] = useState(tenants[0]?.id || '');
-  const [tokAmount, setTokAmount] = useState<number>(0);
-  const [tokDate, setTokDate] = useState(new Date().toISOString().split('T')[0]);
-  const [tokPin, setTokPin] = useState('');
+
 
   // NEW TARIFF FORM
   const [tarAmount, setTarAmount] = useState<number>(currentRate);
@@ -99,59 +95,7 @@ export default function ElectricityClientView({
     }
   };
 
-  const submitTokenPurchase = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tokTenantId) {
-      setError('Please select an active occupant.');
-      return;
-    }
-    setIsLoading(true);
-    resetMessages();
 
-    // Auto-generate token pin if not manually set
-    const pinToSubmit = tokPin?.trim() || [
-      Math.floor(1000 + Math.random() * 9000),
-      Math.floor(1000 + Math.random() * 9000),
-      Math.floor(1000 + Math.random() * 9000),
-      Math.floor(1000 + Math.random() * 9000)
-    ].join('-');
-
-    try {
-      // Units received is derived from Amount / CurrentRate
-      const units = Number(tokAmount) / currentRate;
-
-      const res = await fetch('/api/purchases', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tenant_id: tokTenantId,
-          date: tokDate,
-          amount_paid: Number(tokAmount),
-          units_received: units,
-          rate_at_time: currentRate,
-          token_ref: pinToSubmit,
-          created_by: 'admin'
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed log purchase.');
-      }
-
-      setSuccess(`Token issued successfully! Generated pin: ${pinToSubmit}`);
-      setTokAmount(0);
-      setTokPin('');
-      router.refresh();
-
-    } catch (err: any) {
-      setError(err.message || 'Network error.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const submitTariffRate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,7 +161,7 @@ export default function ElectricityClientView({
       </div>
 
       {/* Tabs list controls */}
-      <div className="bg-slate-900 p-1 border border-slate-800/80 rounded-xl grid grid-cols-3 gap-1" id="electricity-operations-tabs">
+      <div className="bg-slate-900 p-1 border border-slate-800/80 rounded-xl grid grid-cols-2 gap-1" id="electricity-operations-tabs">
         <button
           id="op-tab-reading"
           onClick={() => { setActiveTab('reading'); resetMessages(); }}
@@ -228,15 +172,7 @@ export default function ElectricityClientView({
           Read Meter
         </button>
         
-        <button
-          id="op-tab-token"
-          onClick={() => { setActiveTab('token'); resetMessages(); }}
-          className={`py-2 text-[10px] font-semibold uppercase font-mono tracking-wide rounded-lg cursor-pointer transition-colors ${
-            activeTab === 'token' ? 'bg-slate-950 text-emerald-450 font-bold border border-slate-850' : 'text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          Issue Token
-        </button>
+
 
         <button
           id="op-tab-tariff"
@@ -342,89 +278,6 @@ export default function ElectricityClientView({
         </form>
       )}
 
-      {/* Form B: Issue Sub-meter Token */}
-      {activeTab === 'token' && (
-        <form onSubmit={submitTokenPurchase} className="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex flex-col gap-4 animate-fade-in" id="issue-electricity-token-form">
-          <div className="flex items-center gap-2 mb-1 border-b border-slate-800/80 pb-2">
-            <Cpu className="h-4 w-4 text-emerald-450" />
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-400">Issue Meter Top-up Token</h3>
-          </div>
-
-          {tenants.length === 0 ? (
-            <p className="text-xs text-slate-500 italic py-4">No electricity occupants registered.</p>
-          ) : (
-            <div className="flex flex-col gap-3.5">
-              <div>
-                <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-1">Target Resident Flat</label>
-                <select
-                  id="tok-tenant-select"
-                  value={tokTenantId}
-                  onChange={(e) => setTokTenantId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-xl py-2.5 px-3 text-xs text-white"
-                >
-                  {tenants.map(t => (
-                    <option key={t.id} value={t.id}>{t.room_label} - {t.full_name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-1">Amount Owed / Paid (₦)</label>
-                  <input
-                    id="tok-amount-input"
-                    type="number"
-                    required
-                    placeholder="e.g. 5000"
-                    value={tokAmount === 0 ? '' : tokAmount}
-                    onChange={(e) => setTokAmount(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-xl py-2.5 px-3.5 text-xs text-white font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-1">Receipt Date</label>
-                  <input
-                    id="tok-date-input"
-                    type="date"
-                    required
-                    value={tokDate}
-                    onChange={(e) => setTokDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-xl py-2.5 px-3 text-xs text-white font-mono"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-1">Manual PIN Reference (Optional)</label>
-                <input
-                  id="tok-pin-input"
-                  type="text"
-                  placeholder="Auto-generated if left empty"
-                  value={tokPin}
-                  onChange={(e) => setTokPin(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-xl py-2.5 px-3.5 text-xs text-white font-mono"
-                />
-              </div>
-
-              {tokAmount > 0 && (
-                <div className="bg-emerald-500/10 p-3 rounded-xl border border-emerald-500/15 text-[11px] text-emerald-400 font-mono">
-                  Units auto calculation: ₦{tokAmount} / ₦{currentRate.toFixed(1)} rate = <span className="font-bold">{(tokAmount / currentRate).toFixed(1)} kWh</span> to credit.
-                </div>
-              )}
-
-              <button
-                id="submit-token-btn"
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3 mt-1.5 bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-440 disabled:opacity-50 tracking-wide rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
-              >
-                {isLoading ? 'Generating token...' : 'Confirm and Issue Token'}
-              </button>
-            </div>
-          )}
-        </form>
-      )}
 
       {/* Form C: Manage Tariff Coefficient */}
       {activeTab === 'tariff' && (

@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     // Initialize session
     await setSessionUser(user.id);
 
-    const redirectUrl = user.role === 'admin' ? '/admin' : '/dashboard';
+    const redirectUrl = '/dashboard';
 
     return NextResponse.json({
       success: true,

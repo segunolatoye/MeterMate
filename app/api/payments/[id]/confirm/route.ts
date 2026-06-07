@@ -49,11 +49,15 @@ export async function PATCH(
         .filter(wc => wc.tenant_id === tId && wc.status === 'pending')
         .sort((a, b) => a.month.localeCompare(b.month));
 
-      if (oldestPendingWater.length > 0) {
-        const targetWc = db.water_contributions.find(wc => wc.id === oldestPendingWater[0].id);
-        if (targetWc) {
-          targetWc.status = 'paid';
-          targetWc.payment_id = payment.id;
+      let remainingAmount = payment.amount;
+      for (const pending of oldestPendingWater) {
+        if (remainingAmount >= pending.amount) {
+          const targetWc = db.water_contributions.find(wc => wc.id === pending.id);
+          if (targetWc) {
+            targetWc.status = 'paid';
+            targetWc.payment_id = payment.id;
+            remainingAmount -= pending.amount;
+          }
         }
       }
     } 

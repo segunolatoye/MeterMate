@@ -45,7 +45,8 @@ export async function POST(req: NextRequest) {
       role, 
       room_label, 
       meter_id, 
-      deposit_amount 
+      deposit_amount,
+      initial_reading
     } = await req.json();
 
     if (!full_name || !email || !role || !room_label) {
@@ -122,9 +123,9 @@ export async function POST(req: NextRequest) {
       db.meter_readings.push({
         id: `reading-init-${newTenantId}`,
         tenant_id: newTenantId,
-        reading_date: new Date().toISOString().split('T')[0],
-        reading_kwh: 100, // starting standard index
-        notes: "Baseline registered reading",
+        reading_date: new Date().toISOString(),
+        reading_kwh: Number(initial_reading) || 0,
+        notes: "Baseline registered reading upon creation",
         created_by: caller.id,
         created_at: new Date().toISOString()
       });

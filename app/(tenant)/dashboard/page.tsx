@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getSessionUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
-import { getTenantSummary } from '@/lib/calculations';
+import { getTenantSummary, getWaterPoolSummary } from '@/lib/calculations';
 import TenantSummaryCard from '@/components/TenantSummaryCard';
 import { 
   Zap, 
@@ -25,6 +25,8 @@ export default async function TenantDashboardPage() {
 
   const db = await getDb();
   const summary = getTenantSummary(db, user.id);
+  const waterPoolSummary = getWaterPoolSummary(db);
+  const globalSetting = db.settings.find(s => s.id === 'global_settings');
 
   if (!summary) {
     // If admin is browsing dashboard or fallbacks
@@ -44,23 +46,36 @@ export default async function TenantDashboardPage() {
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 4);
 
-  // Seeded usage data for past 6 months to feed SVG bars
-  const usageHistory = [
-    { label: 'Jan', kwh: 100 },
-    { label: 'Feb', kwh: 120 },
-    { label: 'Mar', kwh: 80 },
-    { label: 'Apr', kwh: 90 },
-    { label: 'May', kwh: 60 },
-    { label: 'Jun', kwh: isOfflineCurrentMonthConsumption() || 35 },
-  ];
+  const generateUsageHistory = () => {
+    const history = [];
+    const now = new Date();
+    const allReadings = [...(summary?.readings || [])].sort((a, b) => 
+      new Date(a.reading_date).getTime() - new Date(b.reading_date).getTime()
+    );
 
-  function isOfflineCurrentMonthConsumption() {
-    if (summary && summary.totalUsedUnits > 0) {
-      // Return a proportion of the actual current used units
-      return Math.round(summary.totalUsedUnits * 0.25);
+    const getMaxReadingUpTo = (date: Date) => {
+      const valid = allReadings.filter(r => new Date(r.reading_date) <= date);
+      if (valid.length === 0) return 0;
+      return Math.max(...valid.map(v => Number(v.reading_kwh)));
+    };
+
+    for (let i = 5; i >= 0; i--) {
+      const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = targetDate.toLocaleString('en-US', { month: 'short' });
+      
+      const endOfThisMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
+      const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - i, 0, 23, 59, 59);
+      
+      const maxThis = getMaxReadingUpTo(endOfThisMonth);
+      const maxPrev = getMaxReadingUpTo(endOfPrevMonth);
+      
+      const kwh = Math.max(0, maxThis - maxPrev);
+      history.push({ label, kwh });
     }
-    return 35;
-  }
+    return history;
+  };
+
+  const usageHistory = generateUsageHistory();
 
   const maxKwh = Math.max(...usageHistory.map(h => h.kwh), 150);
 
@@ -87,7 +102,7 @@ export default async function TenantDashboardPage() {
 
       <div className="px-6 -mt-8 flex flex-col gap-5">
         {/* Main summary cards */}
-        <TenantSummaryCard summary={summary} />
+        <TenantSummaryCard summary={summary} waterPoolSummary={waterPoolSummary} globalSetting={globalSetting} />
 
         {/* Quick Utility Actions Row */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col gap-3">
@@ -142,7 +157,7 @@ export default async function TenantDashboardPage() {
             <div className="w-full flex justify-between items-end h-32 gap-3 px-1 mt-2">
               {usageHistory.map((item) => {
                 const heightPercent = (item.kwh / maxKwh) * 100;
-                const isCurrentMonth = item.label === 'Jun';
+                const isCurrentMonth = item.label === new Date().toLocaleString('en-US', { month: 'short' });
                 return (
                   <div key={item.label} className="flex-1 flex flex-col items-center gap-2 h-full justify-end">
                     {/* Hover detail value bubble */}

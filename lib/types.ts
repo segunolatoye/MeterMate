@@ -90,3 +90,10 @@ export interface SessionUser {
   full_name: string;
   role: 'admin' | 'electricity_tenant' | 'water_only_tenant';
 }
+
+export interface AppSetting {
+  id: string;
+  waterNoticeMessage?: string;
+  waterNoticeDeadline?: string;
+  updated_at?: string;
+}

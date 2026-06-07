@@ -11,9 +11,18 @@ export default async function AdminElectricityPage() {
 
   const db = await getDb();
   
-  // Exclude admin & water only occupants
-  const electricityTenants = db.profiles.filter(p => p.role === 'electricity_tenant');
-  
+  // Include admin and pseudo-tenant for Water Pump
+  const electricityTenants = db.profiles.filter(p => p.role === 'electricity_tenant' || p.role === 'admin');
+  electricityTenants.push({
+    id: 'WATER_PUMP',
+    full_name: 'Water Pumping Machine',
+    room_label: 'Central Compound',
+    role: 'electricity_tenant',
+    email: '',
+    phone: '',
+    deposit_amount: 0,
+    created_at: new Date().toISOString()
+  });
   const currentRate = await getCurrentRate();
   const rateHistory = [...db.electricity_rates].sort((a,b) => 
     new Date(b.effective_from).getTime() - new Date(a.effective_from).getTime()

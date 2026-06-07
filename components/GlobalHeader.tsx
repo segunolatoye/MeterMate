@@ -328,7 +328,7 @@ export default function GlobalHeader({ user }: GlobalHeaderProps) {
     <>
       {/* Visual Top Bar Header */}
       <header className="sticky top-0 z-40 h-[56px] w-full bg-slate-950/80 backdrop-blur-md border-b border-slate-900 px-5 py-3.5 flex items-center justify-between" id="global-application-header">
-        <Link href={isAdmin ? '/admin' : '/dashboard'} className="flex items-center gap-2 hover:opacity-90 transition-opacity" id="header-branding">
+        <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-90 transition-opacity" id="header-branding">
           <div className="w-6.5 h-6.5 rounded-lg bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center text-emerald-400 font-bold text-xs" id="header-accent-brand-icon">
             <Zap className="h-3.5 w-3.5 fill-emerald-400/15" />
           </div>

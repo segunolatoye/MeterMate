@@ -14,16 +14,19 @@ import {
   Ban
 } from 'lucide-react';
 import { Profile, WaterContribution } from '@/lib/types';
+import { WaterPoolSummary } from '@/lib/calculations';
 import WaterStatusGrid from '@/components/WaterStatusGrid';
 
 interface WaterClientViewProps {
   occupants: Profile[];
   contributions: WaterContribution[];
+  waterSummary: WaterPoolSummary;
 }
 
 export default function WaterClientView({
   occupants,
   contributions,
+  waterSummary
 }: WaterClientViewProps) {
   const router = useRouter();
 
@@ -33,6 +36,8 @@ export default function WaterClientView({
 
   // Levy generator month state
   const [targetMonth, setTargetMonth] = useState('2026-06');
+  const [levyAmount, setLevyAmount] = useState<number>(3000);
+  const [deadline, setDeadline] = useState<string>('');
   
   // Ledger view month state
   const [viewMonth, setViewMonth] = useState('2026-06');
@@ -58,6 +63,10 @@ export default function WaterClientView({
     try {
       const res = await fetch(`/api/water/generate/${targetMonth}`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ amount: levyAmount, deadline }),
       });
 
       const data = await res.json();
@@ -110,6 +119,37 @@ export default function WaterClientView({
   return (
     <div className="flex flex-col gap-6 text-slate-100" id="water-manager-view-frame">
       
+      {/* 0. WATER PUMP RESERVE WIDGET */}
+      <div className="bg-slate-900 border border-sky-500/20 rounded-3xl p-5 shadow-lg relative overflow-hidden" id="water-pool-summary-widget">
+        <div className="absolute top-0 right-0 h-16 w-16 bg-sky-500/10 rounded-bl-full flex items-start justify-end p-4">
+          <Droplets className="h-6 w-6 text-sky-400 opacity-50" />
+        </div>
+        
+        <h3 className="text-xs font-bold font-sans tracking-wide text-sky-400 uppercase mb-4 flex items-center gap-1.5">
+          <Sparkles className="h-3.5 w-3.5" />
+          Compound Water Reserve
+        </h3>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800/80 flex flex-col justify-between">
+            <span className="text-[10px] text-slate-500 uppercase font-mono tracking-wider">Accumulated Funds</span>
+            <span className="text-xl font-bold text-slate-100 mt-1">{formatNaira(waterSummary.totalWaterFundsCollected)}</span>
+            <span className="text-[9px] text-slate-500 mt-1">From paid contributions</span>
+          </div>
+          
+          <div className="bg-slate-950 p-4 rounded-2xl border border-sky-500/30 flex flex-col justify-between">
+            <span className="text-[10px] text-sky-400 uppercase font-mono tracking-wider">Available Power</span>
+            <span className="text-xl font-bold text-sky-400 mt-1">
+              {waterSummary.waterUnitsRemaining.toFixed(1)} <span className="text-xs font-normal">kWh</span>
+            </span>
+            <span className="text-[9px] text-sky-500/60 mt-1 flex justify-between">
+              <span>Buy: {waterSummary.totalWaterUnitsPurchased.toFixed(1)}</span>
+              <span>Used: {waterSummary.totalWaterUnitsUsed.toFixed(1)}</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* 1. VISUAL SYSTEM MATRIX */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col gap-3 shadow-sm">
         <h3 className="text-xs font-bold font-sans tracking-wide text-slate-500 uppercase flex items-center gap-1.5 leading-none px-1">
@@ -129,29 +169,53 @@ export default function WaterClientView({
           <h3 className="text-xs font-bold font-sans uppercase tracking-wide text-slate-500">Launch Utility Levy Run</h3>
         </div>
 
-        <div className="grid grid-cols-2 gap-3.5 items-end font-sans">
+        <div className="grid grid-cols-3 gap-3.5 items-end font-sans">
           <div>
             <label className="block text-[10px] font-bold font-sans uppercase text-slate-500 tracking-wide mb-1.5">Target Month Code</label>
             <input
               id="water-target-month-input"
               type="text"
               required
-              placeholder="YYYY-MM (e.g. 2026-06)"
+              placeholder="YYYY-MM"
               value={targetMonth}
               onChange={(e) => setTargetMonth(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800/80 focus:border-sky-500 outline-none rounded-xl py-2.5 px-3.5 text-xs text-slate-100 font-mono font-bold"
             />
           </div>
 
-          <button
-            id="submit-generate-levy-btn"
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-2.5 h-[38px] bg-sky-500 hover:bg-sky-600 text-white font-bold tracking-wide rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer leading-none shadow-md"
-          >
-            Generate Levies
-          </button>
+          <div>
+            <label className="block text-[10px] font-bold font-sans uppercase text-slate-500 tracking-wide mb-1.5">Levy Amount (₦)</label>
+            <input
+              id="water-levy-amount-input"
+              type="number"
+              required
+              value={levyAmount}
+              onChange={(e) => setLevyAmount(Number(e.target.value))}
+              className="w-full bg-slate-950 border border-slate-800/80 focus:border-sky-500 outline-none rounded-xl py-2.5 px-3.5 text-xs text-slate-100 font-mono font-bold"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold font-sans uppercase text-slate-500 tracking-wide mb-1.5">Payment Deadline</label>
+            <input
+              id="water-deadline-input"
+              type="date"
+              required
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800/80 focus:border-sky-500 outline-none rounded-xl py-2.5 px-3.5 text-xs text-slate-100 font-mono font-bold"
+            />
+          </div>
         </div>
+        
+        <button
+          id="submit-generate-levy-btn"
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-2.5 h-[38px] bg-sky-500 hover:bg-sky-600 text-white font-bold tracking-wide rounded-xl text-xs flex items-center justify-center gap-2 transition-all cursor-pointer leading-none shadow-md"
+        >
+          Generate Levies
+        </button>
       </form>
 
       {/* Verification responses */}

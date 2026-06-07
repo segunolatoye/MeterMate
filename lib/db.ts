@@ -15,7 +15,8 @@ import {
   MeterReading, 
   WaterContribution, 
   Payment, 
-  Deposit 
+  Deposit,
+  AppSetting
 } from './types';
 import firebaseConfig from '../firebase-applet-config.json';
 
@@ -32,6 +33,7 @@ export interface DatabaseSchema {
   water_contributions: WaterContribution[];
   payments: Payment[];
   deposits: Deposit[];
+  settings: AppSetting[];
 }
 
 export enum OperationType {
@@ -89,7 +91,7 @@ export const DEFAULT_DB: DatabaseSchema = {
       full_name: "Segun Olatoye",
       phone: "+2348012345678",
       role: "admin",
-      room_label: "Admin Office",
+      room_label: "FLAT 2",
       deposit_amount: 0,
       created_at: "2026-01-01T12:00:00Z"
     },
@@ -129,7 +131,8 @@ export const DEFAULT_DB: DatabaseSchema = {
   meter_readings: [],
   water_contributions: [],
   payments: [],
-  deposits: []
+  deposits: [],
+  settings: []
 };
 
 // Async read from Firestore with Error handling wrapper
@@ -142,7 +145,8 @@ export async function getDb(): Promise<DatabaseSchema> {
       readingsSnap,
       contributionsSnap,
       paymentsSnap,
-      depositsSnap
+      depositsSnap,
+      settingsSnap
     ] = await Promise.all([
       getDocs(collection(db, 'profiles')),
       getDocs(collection(db, 'electricity_rates')),
@@ -150,7 +154,8 @@ export async function getDb(): Promise<DatabaseSchema> {
       getDocs(collection(db, 'meter_readings')),
       getDocs(collection(db, 'water_contributions')),
       getDocs(collection(db, 'payments')),
-      getDocs(collection(db, 'deposits'))
+      getDocs(collection(db, 'deposits')),
+      getDocs(collection(db, 'settings'))
     ]);
 
     const schema: DatabaseSchema = {
@@ -160,7 +165,8 @@ export async function getDb(): Promise<DatabaseSchema> {
       meter_readings: readingsSnap.docs.map(doc => doc.data() as MeterReading),
       water_contributions: contributionsSnap.docs.map(doc => doc.data() as WaterContribution),
       payments: paymentsSnap.docs.map(doc => doc.data() as Payment),
-      deposits: depositsSnap.docs.map(doc => doc.data() as Deposit)
+      deposits: depositsSnap.docs.map(doc => doc.data() as Deposit),
+      settings: settingsSnap.docs.map(doc => doc.data() as AppSetting)
     };
 
     // Purge old seeded records if they exist in Firestore
@@ -271,6 +277,10 @@ export async function saveDb(data: DatabaseSchema): Promise<void> {
 
     data.deposits.forEach(item => {
       promises.push(setDoc(doc(db, 'deposits', item.id), item));
+    });
+
+    data.settings.forEach(item => {
+      promises.push(setDoc(doc(db, 'settings', item.id), item));
     });
 
     await Promise.all(promises);

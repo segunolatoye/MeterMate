@@ -5,11 +5,7 @@ export default async function IndexPage() {
   const user = await getSessionUser();
   
   if (user) {
-    if (user.role === 'admin') {
-      redirect('/admin');
-    } else {
-      redirect('/dashboard');
-    }
+    redirect('/dashboard');
   } else {
     redirect('/login');
   }

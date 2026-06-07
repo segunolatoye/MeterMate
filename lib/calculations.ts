@@ -103,7 +103,7 @@ export function getUnitLossSummary(db: DatabaseSchema): UnitLossSummary {
 
   // Total metered electricity energy used across all tenants
   let totalMeteredUnits = 0;
-  const electricityTenants = db.profiles.filter(p => p.role === 'electricity_tenant');
+  const electricityTenants = db.profiles.filter(p => p.role === 'electricity_tenant' || p.role === 'admin');
   
   for (const tenant of electricityTenants) {
     const tenantReadings = [...db.meter_readings]
@@ -143,7 +143,7 @@ export interface AdminMetrics {
 }
 
 export function getAdminMetrics(db: DatabaseSchema): AdminMetrics {
-  const tenants = db.profiles.filter(p => p.role !== 'admin');
+  const tenants = db.profiles;
   const totalTenantsCount = tenants.length;
 
   // We determine this month's payments
@@ -187,3 +187,49 @@ export function getAdminMetrics(db: DatabaseSchema): AdminMetrics {
     pendingTransfersCount
   };
 }
+
+export interface WaterPoolSummary {
+  totalWaterFundsCollected: number;
+  totalWaterUnitsPurchased: number;
+  totalWaterUnitsUsed: number;
+  waterUnitsRemaining: number;
+  waterReadings: MeterReading[];
+}
+
+export function getWaterPoolSummary(db: DatabaseSchema): WaterPoolSummary {
+  // Sum all 'paid' water contributions
+  const paidContributions = db.water_contributions.filter(c => c.status === 'paid');
+  const totalWaterFundsCollected = paidContributions.reduce((sum, c) => sum + Number(c.amount), 0);
+
+  // Get current rate
+  const sortedRates = [...db.electricity_rates].sort((a, b) => 
+    new Date(b.effective_from).getTime() - new Date(a.effective_from).getTime()
+  );
+  const currentRate = sortedRates.length > 0 ? sortedRates[0].rate_per_kwh : 120;
+
+  // Total purchased units for the water pump
+  const totalWaterUnitsPurchased = totalWaterFundsCollected / currentRate;
+
+  // Readings for WATER_PUMP pseudo-tenant
+  const waterReadings = [...db.meter_readings]
+    .filter(r => r.tenant_id === 'WATER_PUMP')
+    .sort((a, b) => new Date(a.reading_date).getTime() - new Date(b.reading_date).getTime());
+
+  let totalWaterUnitsUsed = 0;
+  if (waterReadings.length >= 2) {
+    const firstReading = Number(waterReadings[0].reading_kwh);
+    const lastReading = Number(waterReadings[waterReadings.length - 1].reading_kwh);
+    totalWaterUnitsUsed = Math.max(0, lastReading - firstReading);
+  }
+
+  const waterUnitsRemaining = Math.max(0, totalWaterUnitsPurchased - totalWaterUnitsUsed);
+
+  return {
+    totalWaterFundsCollected,
+    totalWaterUnitsPurchased,
+    totalWaterUnitsUsed,
+    waterUnitsRemaining,
+    waterReadings
+  };
+}
+

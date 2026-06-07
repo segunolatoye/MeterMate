@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
+import { getWaterPoolSummary } from '@/lib/calculations';
 import WaterClientView from './WaterClientView';
 
 export default async function AdminWaterPage() {
@@ -13,7 +14,9 @@ export default async function AdminWaterPage() {
   
   // All occupants including admin
   const occupants = db.profiles;
+  console.log("WATER PAGE OCCUPANTS:", occupants.map(o => o.role + '-' + o.full_name));
   const contributions = db.water_contributions;
+  const waterSummary = getWaterPoolSummary(db);
 
   return (
     <div className="p-6 flex flex-col gap-6 text-slate-100" id="admin-water-route-enviro">
@@ -29,6 +32,7 @@ export default async function AdminWaterPage() {
       <WaterClientView 
         occupants={occupants} 
         contributions={contributions} 
+        waterSummary={waterSummary}
       />
     </div>
   );

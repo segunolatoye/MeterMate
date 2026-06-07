@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     // Set authenticated cookie
     await setSessionUser(user.id);
 
-    const redirectUrl = user.role === 'admin' ? '/admin' : '/dashboard';
+    const redirectUrl = '/dashboard';
 
     return NextResponse.json({
       success: true,

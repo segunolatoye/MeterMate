@@ -29,24 +29,6 @@ export async function PATCH(
     const oldStatus = contrib.status;
     contrib.status = status as 'pending' | 'paid' | 'waived';
 
-    // If changing from pending to paid manually, log a confirmed payment to mirror it
-    if (oldStatus !== 'paid' && status === 'paid') {
-      const payId = `pay-water-man-${Date.now()}`;
-      db.payments.push({
-        id: payId,
-        tenant_id: contrib.tenant_id,
-        amount: contrib.amount,
-        payment_type: 'water',
-        payment_method: 'manual',
-        paystack_reference: `MAN_WA_${contrib.id.substring(0, 10)}`,
-        status: 'confirmed',
-        confirmed_by: caller.id,
-        note: `Admin marked water month ${contrib.month} as Paid (Manual cash)`,
-        created_at: new Date().toISOString()
-      });
-      contrib.payment_id = payId;
-    }
-
     await saveDb(db);
 
     return NextResponse.json({ 

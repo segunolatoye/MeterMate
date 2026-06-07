@@ -49,24 +49,6 @@ export default function LoginPage() {
       desc: 'Segun Olatoye: Full database, billing, rate config, and water log controls.',
       icon: Shield,
       color: 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-    },
-    {
-      display: 'Electricity Tenant (Flat 2)',
-      email: 'tenant1@metermate.com',
-      pass: '12345',
-      role: 'electricity_tenant',
-      desc: 'Emeka Obi: View balance, purchase tokens, log history, and Paystack card checkout.',
-      icon: Zap,
-      color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
-    },
-    {
-      display: 'Water Tenant (Room 3)',
-      email: 'tenant2@metermate.com',
-      pass: '12345',
-      role: 'water_only_tenant',
-      desc: 'Amina Yusuf: Pay flat N3k/mo water pump fees and access payments ledger.',
-      icon: Droplets,
-      color: 'text-sky-400 bg-sky-500/10 border-sky-500/20'
     }
   ];
 
@@ -262,8 +244,6 @@ export default function LoginPage() {
                 >
                   <option value="">-- Choose Account --</option>
                   <option value="segunolatoye@gmail.com">Segun Olatoye (Admin - segunolatoye@gmail.com)</option>
-                  <option value="tenant1@metermate.com">Emeka Obi (Electricity - tenant1@metermate.com)</option>
-                  <option value="tenant2@metermate.com">Amina Yusuf (Water Only - tenant2@metermate.com)</option>
                 </select>
 
                 <button

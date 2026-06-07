@@ -1,16 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Zap, Droplets, ShieldCheck, TrendingDown, RefreshCcw, AlertTriangle, Coins, CheckCircle, Flame } from 'lucide-react';
-import { TenantSummary } from '@/lib/calculations';
+import { Zap, Droplets, ShieldCheck, TrendingDown, RefreshCcw, AlertTriangle, Coins, CheckCircle, Flame, Sparkles } from 'lucide-react';
+import { TenantSummary, WaterPoolSummary } from '@/lib/calculations';
+import { AppSetting } from '@/lib/types';
 
 interface TenantSummaryCardProps {
   summary: TenantSummary;
+  waterPoolSummary?: WaterPoolSummary;
+  globalSetting?: AppSetting;
   onRefresh?: () => void;
   isRefreshing?: boolean;
 }
 
-export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: TenantSummaryCardProps) {
+export default function TenantSummaryCard({ summary, waterPoolSummary, globalSetting, onRefresh, isRefreshing }: TenantSummaryCardProps) {
   const { 
     profile, 
     remainingUnitsEstimate, 
@@ -19,7 +22,7 @@ export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: 
     outstandingWaterAmount 
   } = summary;
 
-  const isElectricityTenant = profile.role === 'electricity_tenant';
+  const isElectricityTenant = profile.role === 'electricity_tenant' || profile.role === 'admin';
   const isWaterOnlyTenant = profile.role === 'water_only_tenant';
 
   // Format currency helpers
@@ -67,6 +70,31 @@ export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: 
 
   const isDepositDeficit = electricityBalance < 0 && depositHeld < Math.abs(electricityBalance);
 
+  // Dynamic Deadline Calculation
+  let deadlineMessage = '';
+  let isOverdue = false;
+  if (globalSetting?.waterNoticeDeadline && outstandingWaterAmount > 0) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const deadlineDate = new Date(globalSetting.waterNoticeDeadline);
+    deadlineDate.setHours(0, 0, 0, 0);
+
+    const diffTime = deadlineDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > 0) {
+      deadlineMessage = `You have ${diffDays} day${diffDays > 1 ? 's' : ''} until the deadline.`;
+    } else if (diffDays === 0) {
+      deadlineMessage = 'The deadline is TODAY. Please pay immediately.';
+    } else {
+      isOverdue = true;
+      const overdueDays = Math.abs(diffDays);
+      deadlineMessage = `You are ${overdueDays} day${overdueDays > 1 ? 's' : ''} overdue on payment!`;
+    }
+  } else if (outstandingWaterAmount === 0) {
+    deadlineMessage = 'You are fully paid up.';
+  }
+
   return (
     <div className="flex flex-col gap-4" id="tenant-summary-wrapper-card">
       {/* Header Profile / welcome segment */}
@@ -102,6 +130,51 @@ export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: 
         <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl flex items-center gap-2" id="deposit-action-success-box">
           <CheckCircle className="h-4 w-4 shrink-0 animate-pulse" />
           <span>{applySuccess}</span>
+        </div>
+      )}
+
+      {/* Global Water Levy Notice Banner */}
+      {globalSetting && globalSetting.waterNoticeMessage && outstandingWaterAmount > 0 && (
+        <div className={`p-4 rounded-2xl shadow-sm relative overflow-hidden animate-fade-in ${isOverdue ? 'bg-red-500/10 border border-red-500/30' : 'bg-amber-500/10 border border-amber-500/30'}`} id="dashboard-water-notice">
+          <div className={`absolute top-0 right-0 h-16 w-16 rounded-bl-full flex items-start justify-end p-3 ${isOverdue ? 'bg-red-500/10' : 'bg-amber-500/10'}`}>
+            <AlertTriangle className={`h-5 w-5 opacity-50 ${isOverdue ? 'text-red-400' : 'text-amber-400'}`} />
+          </div>
+          <div className="flex flex-col gap-1.5 z-10 relative">
+            <span className={`text-[10px] font-bold font-sans uppercase tracking-widest flex items-center gap-1.5 ${isOverdue ? 'text-red-500' : 'text-amber-500'}`}>
+              <Droplets className="h-3 w-3" />
+              Water Levy Notice
+            </span>
+            <span className={`text-sm font-bold tracking-wide leading-tight ${isOverdue ? 'text-red-100' : 'text-amber-100'}`}>
+              {globalSetting.waterNoticeMessage}
+            </span>
+            
+            {deadlineMessage && (
+              <span className={`text-[11px] font-mono mt-1 font-bold ${isOverdue ? 'text-red-400 animate-pulse' : 'text-amber-400'}`}>
+                {deadlineMessage} (Due: {globalSetting.waterNoticeDeadline})
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Water Pool Widget */}
+      {waterPoolSummary && (
+        <div className="bg-slate-900 border border-sky-500/20 rounded-2xl p-4 flex items-center justify-between shadow-sm relative overflow-hidden" id="card-water-reserve-tenant">
+          <div className="absolute top-0 right-0 h-16 w-16 bg-sky-500/10 rounded-bl-full flex items-start justify-end p-3">
+            <Droplets className="h-5 w-5 text-sky-400 opacity-50" />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Sparkles className="h-3 w-3 text-sky-400" />
+              <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-sky-400">Compound Water Reserve</span>
+            </div>
+            <span className="text-xl font-extrabold text-slate-100 block tracking-tight leading-none">
+              {waterPoolSummary.waterUnitsRemaining.toFixed(1)} <span className="text-xs font-normal text-slate-400">kWh left</span>
+            </span>
+            <span className="text-[9px] text-slate-500 block mt-1.5 leading-tight">
+              Prepaid power available for the water pump
+            </span>
+          </div>
         </div>
       )}
 
@@ -202,7 +275,7 @@ export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: 
               {formatNaira(depositHeld)}
             </span>
             <span className="text-[10px] text-slate-400 block mt-1.5 leading-tight">
-              Held in landlord escrow
+              Held in house escrow
             </span>
           </div>
         </div>
@@ -240,7 +313,7 @@ export default function TenantSummaryCard({ summary, onRefresh, isRefreshing }: 
           <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
             {outstandingWaterAmount === 0 
               ? 'Thank you! Your water pump contributions are fully paid.' 
-              : 'Flat-rate of ₦3,000/month for borehole and central generator fuel.'}
+              : 'Please clear your outstanding water pump levy to avoid disconnection.'}
           </p>
 
           {/* Settle water using security deposit */}
