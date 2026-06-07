@@ -38,19 +38,6 @@ export async function POST(req: NextRequest) {
     db.profiles.push(newProfile);
 
 
-
-    if (role === 'electricity_tenant') {
-      db.meter_readings.push({
-        id: `reading-init-${id}`,
-        tenant_id: id,
-        reading_date: new Date().toISOString().split('T')[0],
-        reading_kwh: 0,
-        notes: "Baseline registered reading on invite",
-        created_by: caller.id,
-        created_at: new Date().toISOString()
-      });
-    }
-
     await saveDb(db);
 
     const appUrl = process.env.APP_URL || 'http://localhost:3000';

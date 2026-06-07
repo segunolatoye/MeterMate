@@ -27,7 +27,7 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
   const [roomLabel, setRoomLabel] = useState('');
   const [meterId, setMeterId] = useState('');
   const [depositAmount, setDepositAmount] = useState<number>(15000);
-  const [initialReading, setInitialReading] = useState<number>(0);
+
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +51,7 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
           room_label: roomLabel,
           meter_id: role === 'electricity_tenant' ? meterId : undefined,
           deposit_amount: depositAmount,
-          initial_reading: initialReading
+
         }),
       });
 
@@ -221,18 +221,7 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 animate-fade-in mt-3.5">
-                <div>
-                  <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-1">Initial Meter Reading (kWh)</label>
-                  <input
-                    id="tenant-initial-reading-input"
-                    type="number"
-                    value={initialReading}
-                    onChange={(e) => setInitialReading(Number(e.target.value))}
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-xl py-2.5 px-3.5 text-xs text-white font-mono"
-                  />
-                </div>
-              </div>
+
               </>
             )}
           </div>
