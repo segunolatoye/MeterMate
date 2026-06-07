@@ -43,6 +43,7 @@ export default async function AdminElectricityPage() {
         tenants={electricityTenants} 
         currentRate={currentRate} 
         rateHistory={rateHistory} 
+        readings={db.meter_readings}
       />
     </div>
   );

@@ -233,6 +233,22 @@ export async function getDb(): Promise<DatabaseSchema> {
       await Promise.all(deletePromises);
     }
 
+    // Seed admin opening reading if missing
+    if (!schema.meter_readings.some(r => r.tenant_id === 'admin-123')) {
+      const initAdminReading: MeterReading = {
+        id: 'reading-init-admin-123',
+        tenant_id: 'admin-123',
+        reading_date: new Date().toISOString(),
+        reading_kwh: 1404.7,
+        notes: 'Initial database opening reading',
+        created_by: 'admin-123',
+        created_at: new Date().toISOString()
+      };
+      schema.meter_readings.push(initAdminReading);
+      await setDoc(doc(db, 'meter_readings', initAdminReading.id), initAdminReading);
+      console.log('Seeded initial 1404.7 reading for Admin!');
+    }
+
     // If the database has no profiles, seed the database with defaults automatically
     if (schema.profiles.length === 0) {
       console.log('Google Firestore is empty. Seeding DEFAULT_DB...');

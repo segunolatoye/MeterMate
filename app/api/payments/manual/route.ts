@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb, saveDb, getCurrentRate } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
+import { notifyUser } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,11 +46,15 @@ export async function POST(req: NextRequest) {
         .filter(wc => wc.tenant_id === tenant_id && wc.status === 'pending')
         .sort((a, b) => a.month.localeCompare(b.month));
 
-      if (oldestPending.length > 0) {
-        const targetWc = db.water_contributions.find(wc => wc.id === oldestPending[0].id);
-        if (targetWc) {
-          targetWc.status = 'paid';
-          targetWc.payment_id = payId;
+      let remainingAmount = numAmount;
+      for (const pending of oldestPending) {
+        if (remainingAmount >= pending.amount) {
+          const targetWc = db.water_contributions.find(wc => wc.id === pending.id);
+          if (targetWc) {
+            targetWc.status = 'paid';
+            targetWc.payment_id = payId;
+            remainingAmount -= pending.amount;
+          }
         }
       }
     } 
@@ -89,6 +94,17 @@ export async function POST(req: NextRequest) {
     }
 
     await saveDb(db);
+
+    // Notify the tenant about the manual payment confirmation
+    try {
+      await notifyUser(tenant_id, {
+        title: 'Payment Confirmed! ✅',
+        body: `Your manual ${payment_type} payment of ₦${numAmount.toLocaleString('en-NG')} has been confirmed by the admin.`,
+        url: '/dashboard'
+      });
+    } catch (e) {
+      console.error('Push notification failed:', e);
+    }
 
     return NextResponse.json({ success: true, message: 'Manual payment successfully logged and ledger updated.' });
 

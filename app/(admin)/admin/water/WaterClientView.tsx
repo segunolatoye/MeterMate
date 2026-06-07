@@ -52,6 +52,7 @@ export default function WaterClientView({
 
   const handleGenerateLevy = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
     if (!/^\d{4}-\d{2}$/.test(targetMonth)) {
       setError('Required format is YYYY-MM.');
       return;
@@ -85,6 +86,7 @@ export default function WaterClientView({
   };
 
   const updateContributionStatus = async (id: string, newStatus: 'paid' | 'waived' | 'pending') => {
+    if (isLoading) return;
     setIsLoading(true);
     resetMessages();
 

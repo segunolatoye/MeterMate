@@ -40,7 +40,7 @@ export async function POST(
 
       if (!exists) {
         const newContrib: WaterContribution = {
-          id: `water-${Date.now()}-${tenant.id}-${month}`,
+          id: `water_${tenant.id}_${month}`,
           tenant_id: tenant.id,
           month,
           amount,

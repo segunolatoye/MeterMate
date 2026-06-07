@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, saveDb } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 import { Payment } from '@/lib/types';
+import { notifyAdmins } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,6 +37,17 @@ export async function POST(req: NextRequest) {
 
     db.payments.push(newPayment);
     await saveDb(db);
+
+    // Notify admins about the new payment log
+    try {
+      await notifyAdmins({
+        title: 'New Payment Logged! 💰',
+        body: `${caller.full_name || 'A tenant'} just logged a ${paymentType} payment of ₦${Number(amount).toLocaleString('en-NG')}.`,
+        url: '/admin/payments'
+      });
+    } catch (e) {
+      console.error('Push notification failed:', e);
+    }
 
     return NextResponse.json({ success: true, payment: newPayment });
 

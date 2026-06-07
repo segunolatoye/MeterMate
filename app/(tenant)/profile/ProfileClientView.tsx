@@ -233,16 +233,7 @@ export default function ProfileClientView({ user, summary }: ProfileClientViewPr
         </form>
       </div>
 
-      {/* General compound info section */}
-      <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 text-slate-400 text-xs flex gap-3 leading-relaxed">
-        <HelpCircle className="h-5 w-5 text-indigo-400 shrink-0 mt-0.5" />
-        <div>
-          <span className="font-bold text-slate-200 block text-xs">Compound Utility Rules</span>
-          <span className="text-[10px] block mt-1">
-            Borehole and central water pumps operate daily from 6:30 AM to 9:00 AM and 6:00 PM to 8:30 PM. For water or sub-meter repairs, kindly contact Landlord Segun.
-          </span>
-        </div>
-      </div>
+
 
       {/* Log out Button */}
       <button

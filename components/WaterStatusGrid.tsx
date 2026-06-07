@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Sparkles, Check, X, Ban, HelpCircle, ArrowRight } from 'lucide-react';
+import { Sparkles, Check, X, Ban, HelpCircle, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Profile, WaterContribution } from '@/lib/types';
 
 interface WaterStatusGridProps {
@@ -17,13 +17,30 @@ export default function WaterStatusGrid({
   onStatusToggle,
   isUpdating = false,
 }: WaterStatusGridProps) {
-  // We will display these 3 months for simple tracking UI (April, May, June 2026)
-  const displayMonths = ['2026-04', '2026-05', '2026-06'];
-  const monthLabels: { [key: string]: string } = {
-    '2026-04': 'April',
-    '2026-05': 'May',
-    '2026-06': 'June',
+  const [monthOffset, setMonthOffset] = useState(0);
+
+  // Generate 3 months starting from June 2026
+  const generateMonths = (offsetBlocks: number) => {
+    const baseDate = new Date(2026, 5, 1); // June 2026 is month index 5
+    baseDate.setMonth(baseDate.getMonth() + (offsetBlocks * 3));
+    
+    const months = [];
+    const labels: { [key: string]: string } = {};
+    
+    for (let i = 0; i < 3; i++) {
+      const d = new Date(baseDate);
+      d.setMonth(d.getMonth() + i);
+      const year = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const key = `${year}-${m}`;
+      months.push(key);
+      labels[key] = d.toLocaleString('en-US', { month: 'short' });
+    }
+    
+    return { months, labels };
   };
+
+  const { months: displayMonths, labels: monthLabels } = generateMonths(monthOffset);
 
   const findContribution = (tenantId: string, month: string) => {
     return contributions.find(c => c.tenant_id === tenantId && c.month === month);
@@ -40,9 +57,25 @@ export default function WaterStatusGrid({
             Tenants vs Months Matrix
           </h3>
         </div>
-        <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-1 rounded border border-slate-800">
-          Year: 2026
-        </span>
+        <div className="flex items-center gap-1.5">
+          <button 
+            onClick={() => setMonthOffset(prev => prev - 1)}
+            className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 transition-colors cursor-pointer active:scale-95"
+            title="Previous 3 Months"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-1 rounded border border-slate-800 font-bold">
+            {monthLabels[displayMonths[0]]} - {monthLabels[displayMonths[2]]}
+          </span>
+          <button 
+            onClick={() => setMonthOffset(prev => prev + 1)}
+            className="p-1 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 transition-colors cursor-pointer active:scale-95"
+            title="Next 3 Months"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">

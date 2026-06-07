@@ -37,25 +37,14 @@ export async function POST(req: NextRequest) {
 
     db.profiles.push(newProfile);
 
-    // Seed water contributions
-    const months = ['2026-04', '2026-05', '2026-06'];
-    months.forEach((m, idx) => {
-      db.water_contributions.push({
-        id: `water-gen-${id}-${m}`,
-        tenant_id: id,
-        month: m,
-        amount: 3000,
-        status: idx === 2 ? 'pending' : 'paid',
-        created_at: new Date().toISOString()
-      });
-    });
+
 
     if (role === 'electricity_tenant') {
       db.meter_readings.push({
         id: `reading-init-${id}`,
         tenant_id: id,
         reading_date: new Date().toISOString().split('T')[0],
-        reading_kwh: 100,
+        reading_kwh: 0,
         notes: "Baseline registered reading on invite",
         created_by: caller.id,
         created_at: new Date().toISOString()

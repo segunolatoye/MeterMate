@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, saveDb } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 import { ElectricityRate } from '@/lib/types';
+import { notifyAllOccupants } from '@/lib/notifications';
 
 // GET: Return all rate logs
 export async function GET(req: NextRequest) {
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     const db = await getDb();
     const newRate: ElectricityRate = {
-      id: `rate-${Date.now()}`,
+      id: `rate_${effective_from}`,
       rate_per_kwh: Number(rate_per_kwh),
       effective_from,
       note: note?.trim() || 'Tariff alignment update',
@@ -49,6 +50,17 @@ export async function POST(req: NextRequest) {
 
     db.electricity_rates.push(newRate);
     await saveDb(db);
+
+    // Notify all tenants about the tariff update
+    try {
+      await notifyAllOccupants({
+        title: 'Electricity Tariff Update ⚡',
+        body: `The power tariff has been updated to ₦${newRate.rate_per_kwh.toLocaleString('en-NG')}/kWh.`,
+        url: '/dashboard'
+      });
+    } catch (e) {
+      console.error('Push notification failed:', e);
+    }
 
     return NextResponse.json({ success: true, rate: newRate });
 

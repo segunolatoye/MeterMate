@@ -260,6 +260,22 @@ export default function TenantSummaryCard({ summary, waterPoolSummary, globalSet
               <span className="text-[10px] text-slate-400 block mt-1.5 leading-tight">
                 Est. units remaining
               </span>
+
+              <div className="mt-3 pt-3 border-t border-slate-800/60">
+                <span className="text-[9px] uppercase font-mono tracking-wider text-slate-500 block mb-0.5">Last Logged Index</span>
+                {summary.readings && summary.readings.length > 0 ? (
+                  <>
+                    <span className="text-sm font-extrabold text-emerald-400 font-mono">
+                      {summary.readings.sort((a, b) => new Date(b.reading_date).getTime() - new Date(a.reading_date).getTime())[0].reading_kwh} kWh
+                    </span>
+                    <span className="text-[9px] text-slate-500 font-mono ml-1">
+                      ({new Date(summary.readings[0].reading_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })})
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-[10px] text-slate-500 italic">No meter index logged yet.</span>
+                )}
+              </div>
             </div>
           </div>
         )}

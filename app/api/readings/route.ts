@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const readingId = `reading-${Date.now()}`;
+    const readingId = `reading_${tenant_id}_${reading_date}`;
     const newReading: MeterReading = {
       id: readingId,
       tenant_id,

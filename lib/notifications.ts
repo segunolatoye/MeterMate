@@ -133,3 +133,50 @@ export async function notifyUser(userId: string, payload: { title: string; body:
   }
 }
 
+/**
+ * Send push notification to all users with the 'admin' role.
+ */
+export async function notifyAdmins(payload: { title: string; body: string; url: string }) {
+  try {
+    const dbInstance = db;
+    // We need to fetch profiles to know who the admins are
+    const profilesSnap = await getDocs(collection(dbInstance, 'profiles'));
+    const adminIds = profilesSnap.docs
+      .map(d => d.data())
+      .filter(p => p.role === 'admin')
+      .map(p => p.id);
+
+    if (adminIds.length === 0) return;
+
+    const subsSnap = await getDocs(collection(dbInstance, 'push_subscriptions'));
+    const adminSubs = subsSnap.docs.filter(doc => adminIds.includes(doc.data().user_id));
+
+    if (adminSubs.length === 0) {
+      console.log(`No active push subscriptions found for admins`);
+      return;
+    }
+
+    const sendPromises = adminSubs.map(async (subsDoc) => {
+      const data = subsDoc.data();
+      const res = await sendPushNotification(
+        {
+          endpoint: data.endpoint,
+          p256dh: data.p256dh,
+          auth: data.auth
+        },
+        payload
+      );
+
+      if (res.expired) {
+        await deleteDoc(doc(dbInstance, 'push_subscriptions', subsDoc.id));
+      }
+    });
+
+    await Promise.all(sendPromises);
+    console.log(`Successfully notified admins with message: "${payload.title}"`);
+  } catch (e) {
+    console.error(`Error sending notification to admins:`, e);
+  }
+}
+
+

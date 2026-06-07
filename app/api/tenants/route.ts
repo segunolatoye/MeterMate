@@ -104,19 +104,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Automatically seed some initial water_contributions for the new user for past months
-    // to give them starting rows
-    const months = ['2026-04', '2026-05', '2026-06'];
-    months.forEach((m, idx) => {
-      db.water_contributions.push({
-        id: `water-gen-${newTenantId}-${m}`,
-        tenant_id: newTenantId,
-        month: m,
-        amount: 3000,
-        status: idx === 2 ? 'pending' : 'paid', // current month June is pending, others paid
-        created_at: new Date().toISOString()
-      });
-    });
+
 
     // If electricity tenant, seed a starting baseline meter reading so usage counts from it
     if (role === 'electricity_tenant') {
