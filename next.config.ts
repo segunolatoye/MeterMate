@@ -17,6 +17,7 @@ const nextConfig: NextConfig = {
     ],
   },
   output: 'standalone',
+  serverExternalPackages: ['firebase-admin'],
   transpilePackages: ['motion'],
   turbopack: {},
   webpack: (config, {dev}) => {

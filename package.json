@@ -9,8 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.4.2",
     "firebase": "^11.1.0",
+    "firebase-admin": "^13.10.0",
     "lucide-react": "^0.468.0",
     "motion": "^12.0.0-alpha.0",
     "next": "^16.0.7",

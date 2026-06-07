@@ -251,7 +251,7 @@ export default function TenantSummaryCard({ summary, waterPoolSummary, globalSet
           <div className="bg-slate-950 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between shadow-sm" id="card-units-remaining">
             <div className="flex items-center gap-2 mb-2">
               <TrendingDown className="text-slate-500 h-4 w-4" />
-              <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-500">Tokens Left</span>
+              <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-500">Energy Left</span>
             </div>
             <div>
               <span className="text-xl font-extrabold text-slate-100 block tracking-tight leading-none">

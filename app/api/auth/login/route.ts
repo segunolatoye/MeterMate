@@ -1,35 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { setSessionUser } from '@/lib/auth';
+import { createSession } from '@/lib/auth';
+import * as admin from 'firebase-admin';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, isMagicLink } = await req.json();
+    const { idToken } = await req.json();
 
-    if (!email) {
-      return NextResponse.json({ message: 'Email address is required.' }, { status: 400 });
+    if (!idToken) {
+      return NextResponse.json({ message: 'Firebase ID Token is required.' }, { status: 400 });
     }
 
+    // Verify the Firebase ID token
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const email = decodedToken.email?.trim().toLowerCase();
+    
     const db = await getDb();
-    // Case-insensitive match for email
-    const trimmedEmail = email.trim().toLowerCase();
-    const user = db.profiles.find(p => p.email && p.email.toLowerCase() === trimmedEmail);
+    // Look up the user profile using the Firebase Auth email
+    const user = db.profiles.find(p => p.email && p.email.toLowerCase() === email);
 
     if (!user) {
-      return NextResponse.json({ message: 'User profile not found.' }, { status: 404 });
+      return NextResponse.json({ message: 'User profile not found in database.' }, { status: 404 });
     }
 
-    // Check dynamic password: use user.password, else fallback to 12345 for tenants or password123 for admin.
-    // Also accept 'password123' for smooth testing of existing default accounts.
-    const defaultPassword = user.role === 'admin' ? 'password123' : '12345';
-    const expectedPassword = user.password || defaultPassword;
-
-    if (!isMagicLink && password !== expectedPassword && password !== 'password123') {
-      return NextResponse.json({ message: 'Incorrect password for this user.' }, { status: 401 });
-    }
-
-    // Set authenticated cookie
-    await setSessionUser(user.id);
+    // Set authenticated session cookie
+    await createSession(idToken);
 
     const redirectUrl = '/dashboard';
 
@@ -46,6 +41,6 @@ export async function POST(req: NextRequest) {
 
   } catch (err: any) {
     console.error('Login routing error:', err);
-    return NextResponse.json({ message: 'Internal server error during login operation.' }, { status: 500 });
+    return NextResponse.json({ message: 'Authentication failed. Invalid or expired token.' }, { status: 401 });
   }
 }

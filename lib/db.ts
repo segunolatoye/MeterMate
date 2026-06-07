@@ -1,13 +1,4 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { 
-  getFirestore, 
-  collection, 
-  getDocs, 
-  doc, 
-  setDoc,
-  deleteDoc
-} from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import * as admin from 'firebase-admin';
 import { 
   Profile, 
   ElectricityRate, 
@@ -18,12 +9,19 @@ import {
   Deposit,
   AppSetting
 } from './types';
-import firebaseConfig from '../firebase-applet-config.json';
+// Initialize Firebase Admin lazily
+if (!admin.apps.length) {
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: privateKey,
+    }),
+  });
+}
 
-// Initialize Firebase lazily
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const auth = getAuth(app);
+export const db = admin.firestore();
 
 export interface DatabaseSchema {
   profiles: Profile[];
@@ -49,33 +47,11 @@ export interface FirestoreErrorInfo {
   error: string;
   operationType: OperationType;
   path: string | null;
-  authInfo: {
-    userId?: string | null;
-    email?: string | null;
-    emailVerified?: boolean | null;
-    isAnonymous?: boolean | null;
-    tenantId?: string | null;
-    providerInfo?: {
-      providerId?: string | null;
-      email?: string | null;
-    }[];
-  }
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
   const errInfo: FirestoreErrorInfo = {
     error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid || null,
-      email: auth.currentUser?.email || null,
-      emailVerified: auth.currentUser?.emailVerified || null,
-      isAnonymous: auth.currentUser?.isAnonymous || null,
-      tenantId: auth.currentUser?.tenantId || null,
-      providerInfo: auth.currentUser?.providerData?.map(provider => ({
-        providerId: provider.providerId,
-        email: provider.email,
-      })) || []
-    },
     operationType,
     path
   };
@@ -148,25 +124,25 @@ export async function getDb(): Promise<DatabaseSchema> {
       depositsSnap,
       settingsSnap
     ] = await Promise.all([
-      getDocs(collection(db, 'profiles')),
-      getDocs(collection(db, 'electricity_rates')),
-      getDocs(collection(db, 'token_purchases')),
-      getDocs(collection(db, 'meter_readings')),
-      getDocs(collection(db, 'water_contributions')),
-      getDocs(collection(db, 'payments')),
-      getDocs(collection(db, 'deposits')),
-      getDocs(collection(db, 'settings'))
+      db.collection('profiles').get(),
+      db.collection('electricity_rates').get(),
+      db.collection('token_purchases').get(),
+      db.collection('meter_readings').get(),
+      db.collection('water_contributions').get(),
+      db.collection('payments').get(),
+      db.collection('deposits').get(),
+      db.collection('settings').get()
     ]);
 
     const schema: DatabaseSchema = {
-      profiles: profilesSnap.docs.map(doc => doc.data() as Profile),
-      electricity_rates: ratesSnap.docs.map(doc => doc.data() as ElectricityRate),
-      token_purchases: purchasesSnap.docs.map(doc => doc.data() as TokenPurchase),
-      meter_readings: readingsSnap.docs.map(doc => doc.data() as MeterReading),
-      water_contributions: contributionsSnap.docs.map(doc => doc.data() as WaterContribution),
-      payments: paymentsSnap.docs.map(doc => doc.data() as Payment),
-      deposits: depositsSnap.docs.map(doc => doc.data() as Deposit),
-      settings: settingsSnap.docs.map(doc => doc.data() as AppSetting)
+      profiles: profilesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Profile)),
+      electricity_rates: ratesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as ElectricityRate)),
+      token_purchases: purchasesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as TokenPurchase)),
+      meter_readings: readingsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as MeterReading)),
+      water_contributions: contributionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as WaterContribution)),
+      payments: paymentsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Payment)),
+      deposits: depositsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Deposit)),
+      settings: settingsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppSetting))
     };
 
     // Purge old seeded records if they exist in Firestore
@@ -185,7 +161,7 @@ export async function getDb(): Promise<DatabaseSchema> {
 
     schema.token_purchases = schema.token_purchases.filter(item => {
       if (seededPurchaseIds.includes(item.id)) {
-        deletePromises.push(deleteDoc(doc(db, 'token_purchases', item.id)));
+        deletePromises.push(db.collection('token_purchases').doc(item.id).delete());
         firestoreCleaned = true;
         return false;
       }
@@ -194,7 +170,7 @@ export async function getDb(): Promise<DatabaseSchema> {
 
     schema.meter_readings = schema.meter_readings.filter(item => {
       if (seededReadingIds.includes(item.id)) {
-        deletePromises.push(deleteDoc(doc(db, 'meter_readings', item.id)));
+        deletePromises.push(db.collection('meter_readings').doc(item.id).delete());
         firestoreCleaned = true;
         return false;
       }
@@ -203,7 +179,7 @@ export async function getDb(): Promise<DatabaseSchema> {
 
     schema.water_contributions = schema.water_contributions.filter(item => {
       if (seededContributionIds.includes(item.id)) {
-        deletePromises.push(deleteDoc(doc(db, 'water_contributions', item.id)));
+        deletePromises.push(db.collection('water_contributions').doc(item.id).delete());
         firestoreCleaned = true;
         return false;
       }
@@ -212,7 +188,7 @@ export async function getDb(): Promise<DatabaseSchema> {
 
     schema.payments = schema.payments.filter(item => {
       if (seededPaymentIds.includes(item.id)) {
-        deletePromises.push(deleteDoc(doc(db, 'payments', item.id)));
+        deletePromises.push(db.collection('payments').doc(item.id).delete());
         firestoreCleaned = true;
         return false;
       }
@@ -221,7 +197,7 @@ export async function getDb(): Promise<DatabaseSchema> {
 
     schema.deposits = schema.deposits.filter(item => {
       if (seededDepositIds.includes(item.id)) {
-        deletePromises.push(deleteDoc(doc(db, 'deposits', item.id)));
+        deletePromises.push(db.collection('deposits').doc(item.id).delete());
         firestoreCleaned = true;
         return false;
       }
@@ -254,35 +230,35 @@ export async function saveDb(data: DatabaseSchema): Promise<void> {
     const promises: Promise<any>[] = [];
 
     data.profiles.forEach(item => {
-      promises.push(setDoc(doc(db, 'profiles', item.id), item));
+      promises.push(db.collection('profiles').doc(item.id).set(item));
     });
 
     data.electricity_rates.forEach(item => {
-      promises.push(setDoc(doc(db, 'electricity_rates', item.id), item));
+      promises.push(db.collection('electricity_rates').doc(item.id).set(item));
     });
 
     data.token_purchases.forEach(item => {
-      promises.push(setDoc(doc(db, 'token_purchases', item.id), item));
+      promises.push(db.collection('token_purchases').doc(item.id).set(item));
     });
 
     data.meter_readings.forEach(item => {
-      promises.push(setDoc(doc(db, 'meter_readings', item.id), item));
+      promises.push(db.collection('meter_readings').doc(item.id).set(item));
     });
 
     data.water_contributions.forEach(item => {
-      promises.push(setDoc(doc(db, 'water_contributions', item.id), item));
+      promises.push(db.collection('water_contributions').doc(item.id).set(item));
     });
 
     data.payments.forEach(item => {
-      promises.push(setDoc(doc(db, 'payments', item.id), item));
+      promises.push(db.collection('payments').doc(item.id).set(item));
     });
 
     data.deposits.forEach(item => {
-      promises.push(setDoc(doc(db, 'deposits', item.id), item));
+      promises.push(db.collection('deposits').doc(item.id).set(item));
     });
 
     data.settings.forEach(item => {
-      promises.push(setDoc(doc(db, 'settings', item.id), item));
+      promises.push(db.collection('settings').doc(item.id).set(item));
     });
 
     await Promise.all(promises);
@@ -325,12 +301,12 @@ export async function deleteProfile(profileId: string): Promise<void> {
 
     // Build the collection of Firestore deleteDoc calls
     const promises: Promise<void>[] = [];
-    promises.push(deleteDoc(doc(db, 'profiles', profileId)));
-    readingIds.forEach(id => promises.push(deleteDoc(doc(db, 'meter_readings', id))));
-    purchaseIds.forEach(id => promises.push(deleteDoc(doc(db, 'token_purchases', id))));
-    paymentIds.forEach(id => promises.push(deleteDoc(doc(db, 'payments', id))));
-    contributionIds.forEach(id => promises.push(deleteDoc(doc(db, 'water_contributions', id))));
-    depositIds.forEach(id => promises.push(deleteDoc(doc(db, 'deposits', id))));
+    promises.push(db.collection('profiles').doc(profileId).delete());
+    readingIds.forEach(id => promises.push(db.collection('meter_readings').doc(id).delete()));
+    purchaseIds.forEach(id => promises.push(db.collection('token_purchases').doc(id).delete()));
+    paymentIds.forEach(id => promises.push(db.collection('payments').doc(id).delete()));
+    contributionIds.forEach(id => promises.push(db.collection('water_contributions').doc(id).delete()));
+    depositIds.forEach(id => promises.push(db.collection('deposits').doc(id).delete()));
 
     await Promise.all(promises);
   } catch (error) {

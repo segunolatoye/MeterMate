@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
 import { notifyAllOccupants } from '@/lib/notifications';
 import { db } from '@/lib/db';
-import { doc, setDoc } from 'firebase/firestore';
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       target: 'all'
     };
 
-    await setDoc(doc(db, 'notifications', notificationId), notificationItem);
+    await db.collection('notifications').doc(notificationId).set(notificationItem);
 
     return NextResponse.json({ 
       success: true, 

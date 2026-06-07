@@ -38,6 +38,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Required parameters missing: rate_per_kwh, effective_from' }, { status: 400 });
     }
 
+    if (Number(rate_per_kwh) <= 0 || !Number.isFinite(Number(rate_per_kwh))) {
+      return NextResponse.json({ message: 'Tariff rate must be a positive number.' }, { status: 400 });
+    }
+
     const db = await getDb();
     const newRate: ElectricityRate = {
       id: `rate_${effective_from}`,

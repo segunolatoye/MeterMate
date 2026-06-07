@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUser } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { collection, getDocs } from 'firebase/firestore';
+
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
     }
 
-    const snap = await getDocs(collection(db, 'notifications'));
+    const snap = await db.collection('notifications').get();
     const notifications = snap.docs.map(doc => doc.data());
 
     // Filter notifications: broadcasted to everyone, or specific to this user

@@ -1,6 +1,6 @@
 import webpush from 'web-push';
 import { db } from './db';
-import { doc, getDoc, setDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
+
 
 interface VapidKeys {
   publicKey: string;
@@ -8,10 +8,10 @@ interface VapidKeys {
 }
 
 export async function getOrGenerateVapidKeys(): Promise<VapidKeys> {
-  const settingsDocRef = doc(db, 'settings', 'vapid_keys');
+  const settingsDocRef = db.collection('settings').doc('vapid_keys');
   try {
-    const snap = await getDoc(settingsDocRef);
-    if (snap.exists()) {
+    const snap = await settingsDocRef.get();
+    if (snap.exists) {
       const data = snap.data() as VapidKeys;
       if (data.publicKey && data.privateKey) {
         return data;
@@ -24,7 +24,7 @@ export async function getOrGenerateVapidKeys(): Promise<VapidKeys> {
   // Generate new keys
   const keys = webpush.generateVAPIDKeys();
   try {
-    await setDoc(settingsDocRef, keys);
+    await settingsDocRef.set(keys);
     console.log('Successfully generated and saved fresh VAPID keys to Firestore settings/vapid_keys');
   } catch (err) {
     console.error('Error saving generated VAPID keys to Firestore:', err);
@@ -70,7 +70,7 @@ export async function sendPushNotification(
  */
 export async function notifyAllOccupants(payload: { title: string; body: string; url: string }) {
   try {
-    const subsSnap = await getDocs(collection(db, 'push_subscriptions'));
+    const subsSnap = await db.collection('push_subscriptions').get();
     const sendPromises = subsSnap.docs.map(async (subsDoc) => {
       const data = subsDoc.data();
       const res = await sendPushNotification(
@@ -85,7 +85,7 @@ export async function notifyAllOccupants(payload: { title: string; body: string;
       // Clean up expired subscriptions automatically
       if (res.expired) {
         console.log(`Cleaning up expired subscription: ${subsDoc.id}`);
-        await deleteDoc(doc(db, 'push_subscriptions', subsDoc.id));
+        await db.collection('push_subscriptions').doc(subsDoc.id).delete();
       }
     });
 
@@ -101,7 +101,7 @@ export async function notifyAllOccupants(payload: { title: string; body: string;
  */
 export async function notifyUser(userId: string, payload: { title: string; body: string; url: string }) {
   try {
-    const subsSnap = await getDocs(collection(db, 'push_subscriptions'));
+    const subsSnap = await db.collection('push_subscriptions').get();
     const userSubs = subsSnap.docs.filter(doc => doc.data().user_id === userId);
     
     if (userSubs.length === 0) {
@@ -122,7 +122,7 @@ export async function notifyUser(userId: string, payload: { title: string; body:
 
       if (res.expired) {
         console.log(`Cleaning up expired subscription: ${subsDoc.id} for user ${userId}`);
-        await deleteDoc(doc(db, 'push_subscriptions', subsDoc.id));
+        await db.collection('push_subscriptions').doc(subsDoc.id).delete();
       }
     });
 
@@ -140,7 +140,7 @@ export async function notifyAdmins(payload: { title: string; body: string; url: 
   try {
     const dbInstance = db;
     // We need to fetch profiles to know who the admins are
-    const profilesSnap = await getDocs(collection(dbInstance, 'profiles'));
+    const profilesSnap = await dbInstance.collection('profiles').get();
     const adminIds = profilesSnap.docs
       .map(d => d.data())
       .filter(p => p.role === 'admin')
@@ -148,7 +148,7 @@ export async function notifyAdmins(payload: { title: string; body: string; url: 
 
     if (adminIds.length === 0) return;
 
-    const subsSnap = await getDocs(collection(dbInstance, 'push_subscriptions'));
+    const subsSnap = await dbInstance.collection('push_subscriptions').get();
     const adminSubs = subsSnap.docs.filter(doc => adminIds.includes(doc.data().user_id));
 
     if (adminSubs.length === 0) {
@@ -168,7 +168,7 @@ export async function notifyAdmins(payload: { title: string; body: string; url: 
       );
 
       if (res.expired) {
-        await deleteDoc(doc(dbInstance, 'push_subscriptions', subsDoc.id));
+        await dbInstance.collection('push_subscriptions').doc(subsDoc.id).delete();
       }
     });
 

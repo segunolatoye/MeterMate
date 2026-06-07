@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, saveDb, getCurrentRate, db as firestoreDb } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 import { notifyUser } from '@/lib/notifications';
-import { doc, setDoc } from 'firebase/firestore';
+
 
 export async function PATCH(
   req: NextRequest,
@@ -97,12 +97,6 @@ export async function PATCH(
     else if (pType === 'electricity' || pType === 'prepayment') {
       const currentRate = await getCurrentRate();
       const unitsReceived = payment.amount / currentRate;
-      const pin = [
-        Math.floor(1000 + Math.random() * 9000),
-        Math.floor(1000 + Math.random() * 9000),
-        Math.floor(1000 + Math.random() * 9000),
-        Math.floor(1000 + Math.random() * 9000),
-      ].join('-');
 
       db.token_purchases.push({
         id: `purchase-auto-tran-${Date.now()}`,
@@ -111,12 +105,12 @@ export async function PATCH(
         amount_paid: payment.amount,
         units_received: unitsReceived,
         rate_at_time: currentRate,
-        token_ref: pin,
+        token_ref: 'AUTO-CREDIT',
         created_by: caller.id,
         created_at: new Date().toISOString()
       });
 
-      payment.note = `${payment.note} | Generated token: ${unitsReceived.toFixed(1)} kWh (Pin: ${pin})`;
+      payment.note = `${payment.note} | Prepaid Electricity: ${unitsReceived.toFixed(1)} kWh`;
     }
 
     await saveDb(db);
@@ -126,7 +120,7 @@ export async function PATCH(
       const typeLabel = pType === 'electricity' ? 'electricity' : pType === 'water' ? 'water levy' : pType === 'deposit' ? 'deposit' : 'prepayment';
       let notifyBody = `Your payment of ₦${payment.amount.toLocaleString()} for ${typeLabel} has been confirmed.`;
       if (pType === 'electricity' || pType === 'prepayment') {
-        notifyBody += ' Your prepaid electricity token is now available on your dashboard!';
+        notifyBody += ' Your prepaid electricity balance has been credited!';
       } else if (pType === 'water') {
         notifyBody += ' Your water contribution has been updated to Paid.';
       }
@@ -139,7 +133,7 @@ export async function PATCH(
 
       // Save notification to historical logs
       const notificationId = 'notif_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-      await setDoc(doc(firestoreDb, 'notifications', notificationId), {
+      await firestoreDb.collection('notifications').doc(notificationId).set({
         id: notificationId,
         title: 'Payment Confirmed! ✅',
         body: notifyBody,

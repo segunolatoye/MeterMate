@@ -3,7 +3,7 @@ import { getDb, saveDb, db as firestoreDb } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 import { WaterContribution } from '@/lib/types';
 import { notifyAllOccupants } from '@/lib/notifications';
-import { doc, setDoc } from 'firebase/firestore';
+
 
 export async function POST(
   req: NextRequest,
@@ -85,7 +85,7 @@ export async function POST(
 
         // Save notification to historical logs
         const notificationId = 'notif_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-        await setDoc(doc(firestoreDb, 'notifications', notificationId), {
+        await firestoreDb.collection('notifications').doc(notificationId).set({
           id: notificationId,
           title: 'New Water Levy Posted! 💧',
           body: notifyBody,

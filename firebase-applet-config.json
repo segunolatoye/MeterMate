@@ -1,10 +1,10 @@
 {
   "projectId": "metermate-4a4ff",
-  "appId": "1:959037924515:web:89f1923399ee8f8c3577f2",
-  "apiKey": "AIzaSyBpMsHIgkSfV0x6LwvkvNUFQb6y6h_RfVQ",
+  "appId": "1:959037924515:web:22430ffc8c987253f74b16",
+  "apiKey": "AIzaSyDRLvUUR60Bg5LDwKnuuf73hiw2qagU2cg",
   "authDomain": "metermate-4a4ff.firebaseapp.com",
   "firestoreDatabaseId": "(default)",
   "storageBucket": "metermate-4a4ff.firebasestorage.app",
   "messagingSenderId": "959037924515",
-  "measurementId": ""
+  "measurementId": "G-NHW2VNLY88"
 }

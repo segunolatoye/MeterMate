@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, Mail, Shield, Zap, Droplets, AlertCircle, ArrowRight, Key, Laptop, Sparkles } from 'lucide-react';
-import { auth } from '@/lib/db';
-import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from '@/lib/firebase-client';
+import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
 
 const GoogleIcon = () => (
   <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
@@ -38,6 +38,28 @@ export default function LoginPage() {
   
 
 
+  const executeServerSessionInit = async (idToken: string) => {
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to establish secure session.');
+      }
+
+      setSuccessMsg('Secure session initialized!');
+      window.location.href = data.redirectUrl;
+    } catch (err: any) {
+      setError(err.message || 'Session initialization failed.');
+      setIsLoading(false);
+    }
+  };
+
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     setError(null);
@@ -45,85 +67,35 @@ export default function LoginPage() {
 
     try {
       const provider = new GoogleAuthProvider();
-      provider.setCustomParameters({
-        prompt: 'select_account'
-      });
+      provider.setCustomParameters({ prompt: 'select_account' });
       
       const result = await signInWithPopup(auth, provider);
-      const googleMail = result.user.email;
-
-      if (!googleMail) {
-        throw new Error('Could not retrieve email from Google Account authorization.');
-      }
-
-      await executeGoogleSessionInit(googleMail);
-
+      const idToken = await result.user.getIdToken();
+      await executeServerSessionInit(idToken);
     } catch (err: any) {
       setError(err.message || 'Google Sign-In authentication failed.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
-
-  const executeGoogleSessionInit = async (targetEmail: string) => {
-    setIsLoading(true);
-    setError(null);
-    setSuccessMsg(null);
-
-    try {
-      const res = await fetch('/api/auth/google-login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: targetEmail }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Failed to authenticate registered occupant.');
-      }
-
-      setSuccessMsg('Google Account verified! Initializing session...');
-      window.location.href = data.redirectUrl;
-    } catch (err: any) {
-      setError(err.message || 'Verification of Google Account profile failed.');
       setIsLoading(false);
     }
   };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isMagicLink) {
+      setError('Magic Link login is currently disabled for security reasons.');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setSuccessMsg(null);
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, isMagicLink }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Login failed. Please verify credentials.');
-      }
-
-      setSuccessMsg(isMagicLink ? 'Check your mailbox for the Magic Link!' : 'Secure session initialized!');
-      
-      if (!isMagicLink) {
-        window.location.href = data.redirectUrl;
-      }
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await result.user.getIdToken();
+      await executeServerSessionInit(idToken);
     } catch (err: any) {
-      setError(err.message || 'Authentication failed.');
-    } finally {
+      setError(err.message || 'Authentication failed. Please check your credentials.');
       setIsLoading(false);
     }
   };
@@ -206,6 +178,7 @@ export default function LoginPage() {
                   placeholder="you@domain.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  suppressHydrationWarning
                   className="w-full bg-[#0a0a0c] border border-[#1e2023] focus:border-emerald-500 outline-none rounded-xl py-2.5 pl-9 pr-3.5 text-xs text-white transition-all font-medium"
                 />
               </div>
@@ -220,9 +193,10 @@ export default function LoginPage() {
                     id="login-password-input"
                     type="password"
                     required
-                    placeholder="Enter password (default: 12345)"
+                    placeholder="Enter password (default: 123456)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    suppressHydrationWarning
                     className="w-full bg-[#0a0a0c] border border-[#1e2023] focus:border-emerald-500 outline-none rounded-xl py-2.5 pl-9 pr-3.5 text-xs text-white transition-all font-medium"
                   />
                 </div>

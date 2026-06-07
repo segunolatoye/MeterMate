@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { doc, setDoc } from 'firebase/firestore';
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,8 +37,8 @@ export async function POST(req: NextRequest) {
     };
 
     // Save the subscription to Firestore
-    const docRef = doc(db, 'push_subscriptions', subscriptionId);
-    await setDoc(docRef, subscriptionItem);
+    const docRef = db.collection('push_subscriptions').doc(subscriptionId);
+    await docRef.set(subscriptionItem);
 
     return NextResponse.json({ 
       success: true, 

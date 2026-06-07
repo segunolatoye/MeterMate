@@ -17,6 +17,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Required fields missing: amount, paymentType' }, { status: 400 });
     }
 
+    if (Number(amount) <= 0 || !Number.isFinite(Number(amount))) {
+      return NextResponse.json({ message: 'Payment amount must be a positive number.' }, { status: 400 });
+    }
+
     const db = await getDb();
     
     // Generate a reference code to match transfers

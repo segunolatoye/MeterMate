@@ -16,6 +16,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: 'Missing parameters: tenant_id, amount, payment_type' }, { status: 400 });
     }
 
+    if (Number(amount) <= 0 || !Number.isFinite(Number(amount))) {
+      return NextResponse.json({ message: 'Payment amount must be a positive number.' }, { status: 400 });
+    }
+
     const db = await getDb();
     const tenant = db.profiles.find(p => p.id === tenant_id);
     if (!tenant) {
@@ -91,12 +95,6 @@ export async function POST(req: NextRequest) {
     else if (payment_type === 'electricity' || payment_type === 'prepayment') {
       const currentRate = await getCurrentRate();
       const unitsReceived = numAmount / currentRate;
-      const pin = [
-        Math.floor(1000 + Math.random() * 9000),
-        Math.floor(1000 + Math.random() * 9000),
-        Math.floor(1000 + Math.random() * 9000),
-        Math.floor(1000 + Math.random() * 9000),
-      ].join('-');
 
       db.token_purchases.push({
         id: `purchase-auto-man-${Date.now()}`,
@@ -105,7 +103,7 @@ export async function POST(req: NextRequest) {
         amount_paid: numAmount,
         units_received: unitsReceived,
         rate_at_time: currentRate,
-        token_ref: pin,
+        token_ref: 'AUTO-CREDIT',
         created_by: caller.id,
         created_at: new Date().toISOString()
       });

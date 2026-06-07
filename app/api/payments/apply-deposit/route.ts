@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, saveDb } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 import { getTenantSummary } from '@/lib/calculations';
-import { doc, setDoc } from 'firebase/firestore';
+
 import { db as firestoreDb } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
     try {
       const notifyBody = `Applied ₦${amount.toLocaleString()} from your held Escrow Deposit to clear your outstanding ${target_utility} balance.`;
       const notificationId = 'notif_dep_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-      await setDoc(doc(firestoreDb, 'notifications', notificationId), {
+      await firestoreDb.collection('notifications').doc(notificationId).set({
         id: notificationId,
         title: 'Escrow Deposit Applied! 💼',
         body: notifyBody,

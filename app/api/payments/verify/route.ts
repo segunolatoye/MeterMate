@@ -90,15 +90,8 @@ export async function POST(req: NextRequest) {
         }
       } 
       else if (pType === 'electricity' || pType === 'prepayment') {
-        // Generate meter token pin
         const currentRate = await getCurrentRate();
         const unitsReceived = verification.amountPaid / currentRate;
-        const pin = [
-          Math.floor(1000 + Math.random() * 9000),
-          Math.floor(1000 + Math.random() * 9000),
-          Math.floor(1000 + Math.random() * 9000),
-          Math.floor(1000 + Math.random() * 9000),
-        ].join('-');
 
         db.token_purchases.push({
           id: `purchase-auto-${Date.now()}`,
@@ -107,12 +100,12 @@ export async function POST(req: NextRequest) {
           amount_paid: verification.amountPaid,
           units_received: unitsReceived,
           rate_at_time: currentRate,
-          token_ref: pin,
+          token_ref: 'AUTO-CREDIT',
           created_by: 'system',
           created_at: new Date().toISOString()
         });
 
-        payment.note = `Verified Token: ${unitsReceived.toFixed(1)} kWh (Pin: ${pin})`;
+        payment.note = `Prepaid Electricity: ${unitsReceived.toFixed(1)} kWh`;
       }
 
       await saveDb(db);
