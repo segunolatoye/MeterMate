@@ -41,6 +41,6 @@ export async function POST(req: NextRequest) {
 
   } catch (err: any) {
     console.error('Login routing error:', err);
-    return NextResponse.json({ message: 'Authentication failed. Invalid or expired token.' }, { status: 401 });
+    return NextResponse.json({ message: `Authentication failed: ${err.message || 'Invalid or expired token'}` }, { status: 401 });
   }
 }

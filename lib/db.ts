@@ -111,9 +111,18 @@ export const DEFAULT_DB: DatabaseSchema = {
   settings: []
 };
 
+let cachedDbSchema: DatabaseSchema | null = null;
+let lastCacheTime = 0;
+const CACHE_TTL_MS = 1000 * 30; // 30 seconds cache
+
 // Async read from Firestore with Error handling wrapper
 export async function getDb(): Promise<DatabaseSchema> {
   try {
+    const now = Date.now();
+    if (cachedDbSchema && (now - lastCacheTime < CACHE_TTL_MS)) {
+      // Return a deep copy to prevent accidental mutation of the cache by callers
+      return JSON.parse(JSON.stringify(cachedDbSchema));
+    }
     const [
       profilesSnap,
       ratesSnap,
@@ -218,6 +227,10 @@ export async function getDb(): Promise<DatabaseSchema> {
       return DEFAULT_DB;
     }
 
+    // Update memory cache
+    cachedDbSchema = JSON.parse(JSON.stringify(schema));
+    lastCacheTime = Date.now();
+
     return schema;
   } catch (error) {
     handleFirestoreError(error, OperationType.LIST, 'database_schema');
@@ -227,6 +240,10 @@ export async function getDb(): Promise<DatabaseSchema> {
 // Async write to Firestore with Error handling wrapper
 export async function saveDb(data: DatabaseSchema): Promise<void> {
   try {
+    // Optimistic cache update to ensure immediate UI consistency and prevent immediate re-reads
+    cachedDbSchema = JSON.parse(JSON.stringify(data));
+    lastCacheTime = Date.now();
+
     const promises: Promise<any>[] = [];
 
     data.profiles.forEach(item => {

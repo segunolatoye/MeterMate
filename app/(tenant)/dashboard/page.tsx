@@ -44,7 +44,7 @@ export default async function TenantDashboardPage() {
   // Recent transactions list
   const recentTransactions = [...summary.payments]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    .slice(0, 4);
+    .slice(0, 2);
 
   const generateUsageHistory = () => {
     const history = [];

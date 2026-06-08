@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, saveDb } from '@/lib/db';
+import { getDb, saveDb, db as firestoreDb } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 
 export async function DELETE(
@@ -22,6 +22,10 @@ export async function DELETE(
     }
 
     db.meter_readings.splice(readingIndex, 1);
+    
+    // Explicitly delete from Firestore
+    await firestoreDb.collection('meter_readings').doc(id).delete();
+    
     await saveDb(db);
 
     return NextResponse.json({ success: true, message: 'Meter reading deleted successfully.' });

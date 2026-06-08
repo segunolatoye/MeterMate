@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, saveDb } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
 import { MeterReading } from '@/lib/types';
+import { notifyUser } from '@/lib/notifications';
 
 // POST: Log a new meter reading (admin only)
 export async function POST(req: NextRequest) {
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const readingId = `reading_${tenant_id}_${reading_date}`;
+    const readingId = `reading_${tenant_id}_${Date.now()}`;
     const newReading: MeterReading = {
       id: readingId,
       tenant_id,
@@ -49,6 +50,16 @@ export async function POST(req: NextRequest) {
 
     db.meter_readings.push(newReading);
     await saveDb(db);
+
+    // Notify the tenant via push notification
+    if (tenant_id !== 'WATER_PUMP') {
+      // Intentionally not awaiting so it doesn't block the API response
+      notifyUser(tenant_id, {
+        title: 'New Sub-Meter Reading',
+        body: `A new electricity reading of ${newKwh} kWh has been logged for your unit.`,
+        url: '/dashboard/history'
+      }).catch(console.error);
+    }
 
     return NextResponse.json({ success: true, reading: newReading });
 

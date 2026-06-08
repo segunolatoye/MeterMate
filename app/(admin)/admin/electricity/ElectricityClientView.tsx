@@ -39,6 +39,7 @@ export default function ElectricityClientView({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [readingToDelete, setReadingToDelete] = useState<string | null>(null);
 
   // LOG READING FORM
   const [readTenantId, setReadTenantId] = useState(tenants[0]?.id || '');
@@ -92,6 +93,10 @@ export default function ElectricityClientView({
       setReadNotes('');
       router.refresh();
 
+      setTimeout(() => {
+        window.location.reload();
+      }, 700);
+
     } catch (err: any) {
       setError(err.message || 'Network error.');
     } finally {
@@ -99,12 +104,13 @@ export default function ElectricityClientView({
     }
   };
 
-  const deleteReading = async (id: string) => {
-    if (isLoading) return;
-    if (!confirm('Are you sure you want to delete this meter reading log?')) return;
+  const deleteReading = async () => {
+    if (isLoading || !readingToDelete) return;
     
     setIsLoading(true);
     resetMessages();
+    const id = readingToDelete;
+    setReadingToDelete(null);
 
     try {
       const res = await fetch(`/api/readings/log/${id}`, {
@@ -118,6 +124,10 @@ export default function ElectricityClientView({
 
       setSuccess('Reading deleted successfully.');
       router.refresh();
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 700);
 
     } catch (err: any) {
       setError(err.message || 'Network error.');
@@ -383,7 +393,8 @@ export default function ElectricityClientView({
                                 </td>
                                 <td className="py-2.5 text-right">
                                   <button 
-                                    onClick={() => deleteReading(r.id)}
+                                    type="button"
+                                    onClick={() => setReadingToDelete(r.id)}
                                     disabled={isLoading}
                                     className="p-1.5 text-red-400/70 hover:text-red-400 hover:bg-red-400/10 rounded transition-colors disabled:opacity-50"
                                     title="Delete Reading"
@@ -488,6 +499,44 @@ export default function ElectricityClientView({
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+      
+      {/* Overlaid Native iOS Style AlertSheet Dialog for Deletion */}
+      {readingToDelete && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4 animate-fade-in" id="ios-delete-alert-sheet">
+          <div className="w-full max-w-sm bg-neutral-900/95 border border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-12 w-12 rounded-full bg-red-500/10 flex items-center justify-center text-red-500">
+                <AlertCircle className="h-6 w-6" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-100">Delete Meter Reading?</h3>
+              <p className="text-xs text-neutral-400 leading-relaxed max-w-[260px] mx-auto">
+                Are you sure you want to delete this meter reading log? This action is permanent and cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2 mt-2">
+              <button
+                type="button"
+                id="confirm-delete-reading-btn"
+                onClick={deleteReading}
+                className="w-full py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Delete Reading
+              </button>
+              <button
+                type="button"
+                id="cancel-delete-reading-btn"
+                onClick={() => setReadingToDelete(null)}
+                className="w-full py-3 bg-neutral-800 hover:bg-neutral-750 text-neutral-300 font-medium rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

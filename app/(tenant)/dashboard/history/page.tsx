@@ -191,6 +191,45 @@ export default async function TenantHistoryPage({
         </div>
       ) : null}
 
+      {/* Sub-meter readings logs */}
+      {(user.role === 'electricity_tenant' || user.role === 'admin') && (activeFilter === 'all' || activeFilter === 'electricity') ? (
+        <div className="flex flex-col gap-3 mt-4">
+          <h2 className="text-[10px] uppercase tracking-wide font-sans font-bold text-slate-500 block px-1">
+            Sub-meter Readings Log
+          </h2>
+
+          {summary.readings.length === 0 ? (
+            <div className="p-8 text-center text-xs text-slate-500 italic bg-slate-900 border border-slate-800 rounded-2xl shadow-sm">
+              No meter readings logged yet.
+            </div>
+          ) : (
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-800 shadow-sm">
+              {[...summary.readings].sort((a, b) => new Date(b.reading_date).getTime() - new Date(a.reading_date).getTime()).map((r) => {
+                return (
+                  <div key={r.id} className="p-4 flex justify-between items-center text-xs hover:bg-slate-950/20">
+                    <div>
+                      <div className="font-extrabold text-slate-200">
+                        {new Date(r.reading_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </div>
+                      <span className="text-[10px] text-slate-500 block mt-1">
+                        Index: <span className="text-emerald-400 font-mono font-bold">{r.reading_kwh} kWh</span>
+                      </span>
+                    </div>
+                    {r.notes && (
+                      <div className="text-right flex flex-col items-end">
+                        <span className="font-sans text-[10px] text-slate-450 truncate max-w-[150px]">
+                          {r.notes}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : null}
+
     </div>
   );
 }
