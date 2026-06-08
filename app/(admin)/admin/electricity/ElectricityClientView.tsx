@@ -42,6 +42,9 @@ export default function ElectricityClientView({
   const [readingToDelete, setReadingToDelete] = useState<string | null>(null);
 
   // LOG READING FORM
+  const [readingMode, setReadingMode] = useState<'single' | 'bulk'>('single');
+  const [bulkReadings, setBulkReadings] = useState<Record<string, number | ''>>({});
+
   const [readTenantId, setReadTenantId] = useState(tenants[0]?.id || '');
   const [readKwh, setReadKwh] = useState<number>(0);
   const [readDate, setReadDate] = useState(new Date().toISOString().split('T')[0]);
@@ -123,6 +126,56 @@ export default function ElectricityClientView({
       }
 
       setSuccess('Reading deleted successfully.');
+      router.refresh();
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 700);
+
+    } catch (err: any) {
+      setError(err.message || 'Network error.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const submitBulkReadings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLoading) return;
+    
+    const payloadReadings = Object.entries(bulkReadings)
+      .map(([tenant_id, kwh]) => ({ tenant_id, reading_kwh: kwh }))
+      .filter(r => r.reading_kwh !== '' && r.reading_kwh !== null);
+
+    if (payloadReadings.length === 0) {
+      setError('Please enter at least one valid reading to submit.');
+      return;
+    }
+
+    setIsLoading(true);
+    resetMessages();
+
+    try {
+      const res = await fetch('/api/readings/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          reading_date: readDate,
+          notes: readNotes || 'Periodic monthly batch reading',
+          readings: payloadReadings
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to log bulk readings.');
+      }
+
+      setSuccess(`Successfully logged ${data.count} meter readings.`);
+      setBulkReadings({});
+      setReadNotes('');
       router.refresh();
 
       setTimeout(() => {
@@ -245,11 +298,32 @@ export default function ElectricityClientView({
       {/* Form A: Log Meter Reading */}
       {activeTab === 'reading' && (
         <div className="flex flex-col gap-5 animate-fade-in">
-        <form onSubmit={submitReading} className="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex flex-col gap-4" id="meter-reading-form">
-          <div className="flex items-center gap-2 mb-1 border-b border-slate-800/80 pb-2">
-            <Cpu className="h-4 w-4 text-emerald-450" />
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-400">Record Sub-Meter Index</h3>
+          
+          <div className="flex bg-slate-950 p-1 border border-slate-800 rounded-xl max-w-[220px] self-end mb-[-10px] relative z-10">
+            <button
+              onClick={() => { setReadingMode('single'); resetMessages(); }}
+              className={`flex-1 py-1.5 text-[10px] font-semibold uppercase tracking-wide rounded-lg cursor-pointer transition-colors ${
+                readingMode === 'single' ? 'bg-slate-900 text-emerald-450 border border-slate-800' : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              Single Entry
+            </button>
+            <button
+              onClick={() => { setReadingMode('bulk'); resetMessages(); }}
+              className={`flex-1 py-1.5 text-[10px] font-semibold uppercase tracking-wide rounded-lg cursor-pointer transition-colors ${
+                readingMode === 'bulk' ? 'bg-slate-900 text-emerald-450 border border-slate-800' : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              Bulk Grid
+            </button>
           </div>
+
+        {readingMode === 'single' ? (
+          <form onSubmit={submitReading} className="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex flex-col gap-4" id="meter-reading-form">
+            <div className="flex items-center gap-2 mb-1 border-b border-slate-800/80 pb-2">
+              <Cpu className="h-4 w-4 text-emerald-450" />
+              <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-400">Record Sub-Meter Index</h3>
+            </div>
 
           {tenants.length === 0 ? (
             <p className="text-xs text-slate-500 italic py-4">No occupants require sub-meter tracking. Register one first!</p>
@@ -320,6 +394,83 @@ export default function ElectricityClientView({
             </div>
           )}
         </form>
+        ) : (
+          <form onSubmit={submitBulkReadings} className="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex flex-col gap-4" id="meter-reading-bulk-form">
+            <div className="flex items-center gap-2 mb-1 border-b border-slate-800/80 pb-2">
+              <Cpu className="h-4 w-4 text-emerald-450" />
+              <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-400">Bulk Sub-Meter Index Entry</h3>
+            </div>
+
+            {tenants.length === 0 ? (
+              <p className="text-xs text-slate-500 italic py-4">No occupants require sub-meter tracking. Register one first!</p>
+            ) : (
+              <div className="flex flex-col gap-4 font-sans">
+                <div className="grid grid-cols-2 gap-3 border-b border-slate-800/50 pb-4">
+                  <div>
+                    <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-1">Global Reading Date</label>
+                    <input
+                      type="date"
+                      required
+                      value={readDate}
+                      onChange={(e) => setReadDate(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-xl py-2.5 px-3 text-xs text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider mb-1">Global Inspection Notes</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Monthly batch reading"
+                      value={readNotes}
+                      onChange={(e) => setReadNotes(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-xl py-2.5 px-3.5 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="block text-[11px] font-mono uppercase text-slate-400 tracking-wider">Occupant Readings</label>
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-800/50">
+                    {tenants.map(t => {
+                      const tenantReadings = readings
+                        .filter(r => r.tenant_id === t.id)
+                        .sort((a, b) => new Date(b.reading_date).getTime() - new Date(a.reading_date).getTime());
+                      const lastKwh = tenantReadings.length > 0 ? tenantReadings[0].reading_kwh : 0;
+                      
+                      return (
+                        <div key={t.id} className="p-3 flex items-center justify-between">
+                          <div className="flex flex-col">
+                            <span className="text-xs font-bold text-slate-200">{t.room_label}</span>
+                            <span className="text-[10px] text-slate-500">{t.full_name}</span>
+                            <span className="text-[9px] text-slate-600 font-mono mt-0.5">Last: {lastKwh} kWh</span>
+                          </div>
+                          <div className="w-1/3">
+                            <input
+                              type="number"
+                              step="any"
+                              placeholder="New Index"
+                              value={bulkReadings[t.id] === undefined ? '' : bulkReadings[t.id]}
+                              onChange={(e) => setBulkReadings({ ...bulkReadings, [t.id]: e.target.value ? Number(e.target.value) : '' })}
+                              className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 outline-none rounded-xl py-2 px-3 text-xs text-emerald-400 font-mono font-bold text-right"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-3 mt-1.5 bg-emerald-500 text-slate-950 font-bold hover:bg-emerald-440 disabled:opacity-50 tracking-wide rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer transition-all"
+                >
+                  {isLoading ? 'Storing Batch Logs...' : 'Submit Bulk Readings'}
+                </button>
+              </div>
+            )}
+          </form>
+        )}
         
         {/* Occupant Reading History List */}
         <div className="flex flex-col gap-3 mt-2">
@@ -504,8 +655,6 @@ export default function ElectricityClientView({
         </div>
       )}
 
-    </div>
-      
       {/* Overlaid Native iOS Style AlertSheet Dialog for Deletion */}
       {readingToDelete && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4 animate-fade-in" id="ios-delete-alert-sheet">
