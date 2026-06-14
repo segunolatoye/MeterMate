@@ -14,7 +14,8 @@ import {
   Clock, 
   ChevronRight,
   TrendingUp,
-  History
+  History,
+  BarChart
 } from 'lucide-react';
 
 export default async function TenantDashboardPage() {
@@ -138,6 +139,20 @@ export default async function TenantDashboardPage() {
               </div>
             </Link>
           </div>
+
+          <Link
+            id="quick-report-link"
+            href="/report"
+            className="p-3.5 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-900 transition-all flex items-center justify-between text-xs"
+          >
+            <div>
+              <span className="font-extrabold text-slate-200 block">Transparency Report</span>
+              <span className="text-[10px] text-slate-500 mt-0.5 block">View compound public ledger</span>
+            </div>
+            <div className="h-7 w-7 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
+              <BarChart className="h-4 w-4" />
+            </div>
+          </Link>
         </div>
  
       {/* Dynamic 6-Month Usage History Column (Only if Electricity Tenant) */}

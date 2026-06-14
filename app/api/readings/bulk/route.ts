@@ -30,8 +30,12 @@ export async function POST(req: NextRequest) {
         continue; // Skip incomplete records
       }
 
-      const tenant = db.profiles.find(p => p.id === tenant_id);
-      if (!tenant || tenant.role !== 'electricity_tenant') {
+      let tenant = db.profiles.find(p => p.id === tenant_id);
+      if (tenant_id === 'WATER_PUMP') {
+        tenant = { id: 'WATER_PUMP', role: 'electricity_tenant', room_label: 'Water Pump' } as any;
+      }
+      
+      if (!tenant || (tenant.role !== 'electricity_tenant' && tenant.role !== 'admin')) {
         continue; // Skip invalid tenants
       }
 

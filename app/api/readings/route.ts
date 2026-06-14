@@ -19,7 +19,11 @@ export async function POST(req: NextRequest) {
     }
 
     const db = await getDb();
-    const tenant = db.profiles.find(p => p.id === tenant_id);
+    let tenant = db.profiles.find(p => p.id === tenant_id);
+    if (tenant_id === 'WATER_PUMP') {
+      tenant = { id: 'WATER_PUMP', role: 'electricity_tenant', room_label: 'Water Pump' } as any;
+    }
+    
     if (!tenant) {
       return NextResponse.json({ message: 'Target tenant profile not found.' }, { status: 404 });
     }

@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, CreditCard, History, User, Shield } from 'lucide-react';
+import { Home, CreditCard, History, User, Shield, BarChart } from 'lucide-react';
 
 interface BottomNavProps {
   role?: 'admin' | 'electricity_tenant' | 'water_only_tenant';
@@ -37,6 +37,12 @@ export default function BottomNav({ role }: BottomNavProps) {
       icon: History,
       href: '/dashboard/history',
       active: pathname === '/dashboard/history',
+    },
+    {
+      label: 'Report',
+      icon: BarChart,
+      href: '/report',
+      active: pathname === '/report',
     },
     {
       label: 'Profile',
