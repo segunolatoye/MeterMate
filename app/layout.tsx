@@ -30,7 +30,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en">
       <body suppressHydrationWarning className="bg-slate-950 font-sans antialiased text-slate-100 min-h-screen">
         {/* Maximum 430px Container centered on Desktop */}
-        <div className="relative mx-auto min-h-screen max-w-[430px] bg-slate-900 shadow-2xl flex flex-col border-x border-slate-800 pb-20">
+        <div className="relative mx-auto min-h-screen max-w-[430px] bg-slate-900 shadow-2xl flex flex-col border-x border-slate-800">
           <GlobalHeader user={user} />
           <main className="flex-1 w-full flex flex-col">
             {children}

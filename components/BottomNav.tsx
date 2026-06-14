@@ -63,8 +63,8 @@ export default function BottomNav({ role }: BottomNavProps) {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-slate-800 bg-slate-950/95 backdrop-blur-md pb-safe" id="bottom-navigation-bar">
-      <div className="mx-auto flex h-16 max-w-[430px] items-center justify-around px-2">
+    <nav className="sticky bottom-0 mt-auto z-50 w-full border-t border-slate-800 bg-slate-950/95 backdrop-blur-md pb-safe" id="bottom-navigation-bar">
+      <div className="mx-auto flex h-16 w-full items-center justify-around px-2">
         {navItems.map((item) => {
           const IconComp = item.icon;
           return (
