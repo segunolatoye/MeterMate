@@ -48,7 +48,7 @@ export default function BroadcastForm() {
   }
 
   return (
-    <div className="flex flex-col gap-4 bg-slate-900 rounded-3xl p-5 border border-slate-800">
+    <div className="flex flex-col gap-4 bg-slate-900/60 backdrop-blur-xl rounded-3xl p-5 border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
       <div className="flex items-center gap-2 mb-2 border-b border-slate-800/80 pb-2">
         <Send className="h-4 w-4 text-emerald-400" />
         <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-400">Composed Message Broadcast</h3>
@@ -76,10 +76,10 @@ export default function BroadcastForm() {
           <input
             type="text"
             required
-            placeholder="e.g., Pumping Levy Active 💧"
+            placeholder="e.g., Pumping Levy Active"
             value={manualTitle}
             onChange={(e) => setManualTitle(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+            className="w-full bg-black/20 border border-white/10 backdrop-blur-sm rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors shadow-inner"
           />
         </div>
 
@@ -93,7 +93,7 @@ export default function BroadcastForm() {
             placeholder="Write detailed alerts body here..."
             value={manualBody}
             onChange={(e) => setManualBody(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors resize-none"
+            className="w-full bg-black/20 border border-white/10 backdrop-blur-sm rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors resize-none shadow-inner"
           />
         </div>
 
@@ -106,7 +106,7 @@ export default function BroadcastForm() {
             placeholder="/dashboard"
             value={manualUrl}
             onChange={(e) => setManualUrl(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors"
+            className="w-full bg-black/20 border border-white/10 backdrop-blur-sm rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors shadow-inner"
           />
         </div>
 
@@ -114,7 +114,7 @@ export default function BroadcastForm() {
           <button
             type="submit"
             disabled={broadcasting}
-            className="w-full py-3 bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-slate-950 font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
+            className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors disabled:opacity-50 shadow-[0_0_15px_rgba(34,197,94,0.2)] border border-emerald-400"
           >
             {broadcasting ? (
               <>
@@ -124,7 +124,7 @@ export default function BroadcastForm() {
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                Submit Custom Broadcast ✈️
+                Submit Custom Broadcast
               </>
             )}
           </button>

@@ -22,7 +22,7 @@ export default async function PayRoutePage({
 
   // Parse any pre-selected query routing parameters
   const resolvedParams = await searchParams;
-  const initialMethod = typeof resolvedParams.method === 'string' ? resolvedParams.method : 'card';
+  const initialMethod = typeof resolvedParams.method === 'string' ? resolvedParams.method : 'transfer';
   const initialType = typeof resolvedParams.type === 'string' ? resolvedParams.type : 'electricity';
 
   // Securely retrieve bank details from process.env server-side
@@ -38,8 +38,8 @@ export default async function PayRoutePage({
         <span className="text-[10px] font-bold font-sans uppercase tracking-[0.08em] text-slate-400">
           Finance Portal
         </span>
-        <h1 className="text-xl font-extrabold text-slate-900 tracking-tight mt-0.5" id="pay-screen-h1">
-          Submit Payment
+        <h1 className="text-xl font-extrabold text-slate-100 tracking-tight mt-0.5" id="pay-screen-h1">
+          Make a Payment
         </h1>
       </div>
 

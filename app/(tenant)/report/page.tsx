@@ -8,7 +8,8 @@ import {
   Droplets, 
   ShieldCheck, 
   Info,
-  Building
+  Building,
+  MessageCircle
 } from 'lucide-react';
 
 export default async function TransparencyReportPage() {
@@ -39,8 +40,34 @@ export default async function TransparencyReportPage() {
     };
   }).filter(r => r.summary !== null);
 
-  // Sort by room label (alphabetically)
-  tenantReports.sort((a, b) => (a.profile.room_label || '').localeCompare(b.profile.room_label || ''));
+  // Sort by room label naturally (so Flat 2 comes before Flat 10)
+  tenantReports.sort((a, b) => 
+    (a.profile.room_label || '').localeCompare(b.profile.room_label || '', undefined, { numeric: true, sensitivity: 'base' })
+  );
+
+  // Generate WhatsApp Export Text
+  const reportLines = [
+    `*MeterMate Transparency Report*`,
+    `Generated: ${new Date().toLocaleDateString('en-GB')}`,
+    ``
+  ];
+
+  tenantReports.forEach(report => {
+    const { profile, summary } = report;
+    if (!summary) return;
+    
+    const owesElectricity = summary.electricityBalance < 0;
+    const hasPendingWater = summary.outstandingWaterCount > 0;
+    
+    reportLines.push(`*${profile.room_label || 'Unassigned'} (${profile.full_name})*`);
+    reportLines.push(`• Power Bal: ${owesElectricity ? '-' : (summary.electricityBalance > 0 ? '+' : '')}₦${Math.abs(summary.electricityBalance).toLocaleString()}`);
+    reportLines.push(`• Water: ${hasPendingWater ? `${summary.outstandingWaterCount} pending` : 'Fully Paid'}`);
+    reportLines.push(`• Escrow: ₦${summary.depositHeld.toLocaleString()}`);
+    reportLines.push(``);
+  });
+
+  const whatsappText = encodeURIComponent(reportLines.join('\n'));
+  const whatsappUrl = `https://wa.me/?text=${whatsappText}`;
 
   return (
     <div className="p-6 flex flex-col gap-6 text-slate-100 pb-24" id="transparency-report-screen">
@@ -49,12 +76,26 @@ export default async function TransparencyReportPage() {
           <BarChart className="w-24 h-24 text-emerald-500" />
         </div>
         <div className="relative z-10">
-          <span className="text-[10px] font-bold font-sans uppercase tracking-[0.08em] text-emerald-500 flex items-center gap-1.5">
-            <Building className="w-3 h-3" /> Compound Portal
-          </span>
-          <h1 className="text-2xl font-extrabold tracking-tight mt-1 text-white">
-            Transparency Report
-          </h1>
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="text-[10px] font-bold font-sans uppercase tracking-[0.08em] text-emerald-500 flex items-center gap-1.5">
+                <Building className="w-3 h-3" /> Compound Portal
+              </span>
+              <h1 className="text-2xl font-extrabold tracking-tight mt-1 text-white">
+                Transparency Report
+              </h1>
+            </div>
+            
+            <a 
+              href={whatsappUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/20 text-[#25D366] rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors shrink-0"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Export
+            </a>
+          </div>
           <p className="text-xs text-slate-400 mt-2 max-w-[280px] leading-relaxed">
             Public ledger showing real-time utility balances and escrow deposits for all occupants.
           </p>

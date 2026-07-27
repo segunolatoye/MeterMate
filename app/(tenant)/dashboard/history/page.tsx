@@ -56,7 +56,9 @@ export default async function TenantHistoryPage({
     '2026-04': 'April 2026',
     '2026-05': 'May 2026',
     '2026-06': 'June 2026',
-  };  return (
+  };
+
+  return (
     <div className="p-6 flex flex-col gap-5 text-slate-100" id="tenant-history-ledger-screen">
       <div>
         <span className="text-[10px] font-bold font-sans uppercase tracking-[0.08em] text-slate-500">
@@ -131,8 +133,8 @@ export default async function TenantHistoryPage({
                   </div>
 
                   <div className="text-right flex flex-col gap-1 items-end shrink-0">
-                    <span className="font-mono font-extrabold text-slate-200">
-                      {formatNaira(p.amount)}
+                    <span className={`font-mono font-extrabold ${p.amount > 0 ? 'text-emerald-400' : 'text-slate-200'}`}>
+                      {p.amount > 0 ? '+' : ''}{formatNaira(p.amount)}
                     </span>
                     <span className={`text-[8px] font-bold font-mono px-2 py-0.5 rounded-full uppercase border ${
                       isConfirmed

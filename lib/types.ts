@@ -93,6 +93,7 @@ export interface SessionUser {
 
 export interface AppSetting {
   id: string;
+  waterNoticeActive?: boolean;
   waterNoticeMessage?: string;
   waterNoticeDeadline?: string;
   updated_at?: string;

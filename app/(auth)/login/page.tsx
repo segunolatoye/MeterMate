@@ -31,7 +31,6 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isMagicLink, setIsMagicLink] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -80,11 +79,6 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isMagicLink) {
-      setError('Magic Link login is currently disabled for security reasons.');
-      return;
-    }
 
     setIsLoading(true);
     setError(null);
@@ -103,17 +97,11 @@ export default function LoginPage() {
 
 
   return (
-    <div className="absolute inset-0 bg-[#0c0d0e] overflow-y-auto flex flex-col justify-start px-6 py-10" id="login-screen-view">
-      <div className="w-full max-w-sm mx-auto flex flex-col gap-6" id="login-container">
+    <div className="flex-1 w-full overflow-y-auto flex flex-col justify-center px-6 py-10 relative z-10" id="login-screen-view">
+      <div className="w-full max-w-sm mx-auto flex flex-col gap-8" id="login-container">
         {/* Branding Header */}
-        <div className="flex flex-col items-center justify-center text-center mt-2 gap-2">
-          <div className="h-16 w-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-mono text-3xl font-black mb-1 shadow-lg shadow-emerald-500/5">
-            MM
-          </div>
-          <h1 className="text-3xl font-black tracking-tight text-white mb-0.5">MeterMate</h1>
-          <p className="text-xs text-zinc-400 max-w-[280px] leading-relaxed">
-            Shared utilities and smart meters companion for modern communities
-          </p>
+        <div className="flex flex-col items-center justify-center text-center mt-2 mb-4">
+          <img src="/logo.svg" alt="MeterMate Logo" className="h-16 w-auto object-contain drop-shadow-xl" />
         </div>
 
         {/* Auth Error / Success feedback */}
@@ -132,45 +120,15 @@ export default function LoginPage() {
         )}
 
         {/* PRIMARY AUTHENTICATION BLOCK: google logic */}
-        <div className="bg-[#151619] border border-[#232529] rounded-3xl p-5 shadow-2xl relative overflow-hidden flex flex-col gap-4">
+        <div className="bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-[32px] p-8 shadow-[0_4px_30px_rgba(0,0,0,0.1)] relative overflow-hidden flex flex-col gap-7">
           <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-to-r from-transparent via-emerald-500/40 to-transparent" />
-          
-          <div className="text-center mb-1">
-            <h2 className="text-xs font-bold tracking-widest text-zinc-400 uppercase">
-              Secure Sign In
-            </h2>
-            <p className="text-[10px] text-zinc-500 mt-1">Authorized compound occupants only</p>
-          </div>
-
-          {/* Primary Action Button: iOS style google login */}
-          <button
-            id="google-primary-login-btn"
-            type="button"
-            disabled={isLoading}
-            onClick={handleGoogleLogin}
-            className="w-full bg-white hover:bg-neutral-100 active:scale-98 disabled:opacity-50 text-slate-900 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2.5 transition-all cursor-pointer shadow-md"
-          >
-            <GoogleIcon />
-            <span>Sign in with Google</span>
-          </button>
-
-
-
-          {/* Elegant Divider between Primary and Alternate */}
-          <div className="flex items-center text-center w-full gap-2 px-1">
-            <div className="flex-1 h-[1px] bg-[#232529]" />
-            <span className="text-[9px] font-bold font-mono tracking-widest text-zinc-500 uppercase shrink-0">
-              or use secure password
-            </span>
-            <div className="flex-1 h-[1px] bg-[#232529]" />
-          </div>
 
           {/* Fallback Form */}
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <form onSubmit={handleLogin} className="flex flex-col gap-5">
             <div>
-              <label className="block text-[9px] font-bold font-mono uppercase text-zinc-400 tracking-wider mb-1.5">Email Address</label>
+              <label className="block text-[9px] font-bold font-sans uppercase text-slate-400 tracking-wider mb-2">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 h-3.5 w-3.5" />
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 h-4 w-4" />
                 <input
                   id="login-email-input"
                   type="email"
@@ -179,57 +137,77 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   suppressHydrationWarning
-                  className="w-full bg-[#0a0a0c] border border-[#1e2023] focus:border-emerald-500 outline-none rounded-xl py-2.5 pl-9 pr-3.5 text-xs text-white transition-all font-medium"
+                  className="w-full bg-black/20 border border-white/10 backdrop-blur-sm focus:border-emerald-500 outline-none rounded-xl py-3.5 pl-10 pr-4 text-sm text-white transition-all font-medium shadow-inner"
                 />
               </div>
             </div>
 
-            {!isMagicLink && (
-              <div>
-                <label className="block text-[9px] font-bold font-mono uppercase text-zinc-400 tracking-wider mb-1.5">Secure Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 h-3.5 w-3.5" />
-                  <input
-                    id="login-password-input"
-                    type="password"
-                    required
-                    placeholder="Enter password (default: 123456)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    suppressHydrationWarning
-                    className="w-full bg-[#0a0a0c] border border-[#1e2023] focus:border-emerald-500 outline-none rounded-xl py-2.5 pl-9 pr-3.5 text-xs text-white transition-all font-medium"
-                  />
-                </div>
+            <div>
+              <label className="block text-[9px] font-bold font-sans uppercase text-slate-400 tracking-wider mb-2">Secure Password</label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 h-4 w-4" />
+                <input
+                  id="login-password-input"
+                  type="password"
+                  required
+                  placeholder="Enter password (default: 123456)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  suppressHydrationWarning
+                  className="w-full bg-black/20 border border-white/10 backdrop-blur-sm focus:border-emerald-500 outline-none rounded-xl py-3.5 pl-10 pr-4 text-sm text-white transition-all font-medium shadow-inner"
+                />
               </div>
-            )}
+            </div>
 
             <button
               id="login-submit-btn"
               type="submit"
               disabled={isLoading}
-              className="w-full mt-1 bg-emerald-500 hover:bg-emerald-600 active:scale-98 disabled:opacity-50 text-slate-950 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer font-sans"
+              className="w-full mt-3 bg-emerald-500 hover:bg-emerald-400 border border-emerald-400 active:scale-98 disabled:opacity-50 text-slate-950 py-3.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer font-sans shadow-[0_0_20px_rgba(34,197,94,0.3)]"
             >
-              {isLoading ? 'Verifying session...' : isMagicLink ? 'Email me Magic Link' : 'Proceed to Dashboard'}
+              {isLoading ? 'Verifying session...' : 'Proceed to Dashboard'}
               <ArrowRight className="h-4 w-4" />
             </button>
           </form>
 
-          <div className="pt-2 border-t border-[#1e2023] text-center">
+          {/* Elegant Divider between Primary and Alternate */}
+          <div className="flex items-center text-center w-full gap-2 px-1 mt-1">
+            <div className="flex-1 h-[1px] bg-white/10" />
+            <span className="text-[9px] font-bold font-sans tracking-widest text-slate-500 uppercase shrink-0">
+              or connect with
+            </span>
+            <div className="flex-1 h-[1px] bg-white/10" />
+          </div>
+
+          {/* Primary Action Button: iOS style google login */}
+          <div className="flex justify-center">
             <button
-              id="toggle-login-method-btn"
-              onClick={() => {
-                setIsMagicLink(!isMagicLink);
-                setError(null);
-                setSuccessMsg(null);
-              }}
-              className="text-[10px] text-emerald-400 font-bold hover:underline cursor-pointer"
+              id="google-primary-login-btn"
+              type="button"
+              disabled={isLoading}
+              onClick={handleGoogleLogin}
+              className="w-14 h-14 bg-black/20 hover:bg-black/40 backdrop-blur-sm border border-white/10 active:scale-98 disabled:opacity-50 text-slate-100 rounded-full flex items-center justify-center transition-all cursor-pointer shadow-inner"
+              title="Sign in with Google"
             >
-              {isMagicLink ? 'Use Email / Password login' : 'Use passwordless Magic Link'}
+              <GoogleIcon />
             </button>
           </div>
         </div>
 
-
+        {/* Footer text */}
+        <div className="text-center mt-3 flex flex-col items-center gap-3">
+          <div>
+            <h2 className="text-xs font-bold tracking-widest text-slate-300 uppercase font-sans">
+              Secure Authentication
+            </h2>
+            <p className="text-[10px] text-slate-500 mt-1">Authorized compound occupants only</p>
+          </div>
+          
+          <div className="flex items-center gap-1.5 text-[9px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-500/10 px-2.5 py-1 rounded-full uppercase tracking-widest shadow-inner">
+            <Shield className="h-3 w-3" />
+            End-to-End Encrypted
+          </div>
+        </div>
       </div>
     </div>
   );

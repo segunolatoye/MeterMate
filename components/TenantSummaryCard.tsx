@@ -98,15 +98,7 @@ export default function TenantSummaryCard({ summary, waterPoolSummary, globalSet
   return (
     <div className="flex flex-col gap-4" id="tenant-summary-wrapper-card">
       {/* Header Profile / welcome segment */}
-      <div className="flex justify-between items-center px-1">
-        <div>
-          <span className="text-[10px] font-mono tracking-wider font-bold text-slate-500 uppercase">
-            Active Residence
-          </span>
-          <h2 className="text-lg font-bold text-slate-100 flex items-center gap-1.5 leading-none mt-0.5" id="tenant-summary-room-label">
-            {profile.room_label} <span className="text-slate-700 font-normal">|</span> <span className="text-xs font-semibold text-slate-400">{profile.full_name}</span>
-          </h2>
-        </div>
+      <div className="flex justify-end items-center px-1">
         {onRefresh && (
           <button 
             id="pull-to-refresh-trigger"
@@ -133,43 +125,21 @@ export default function TenantSummaryCard({ summary, waterPoolSummary, globalSet
         </div>
       )}
 
-      {/* Global Water Levy Notice Banner */}
-      {globalSetting && globalSetting.waterNoticeMessage && outstandingWaterAmount > 0 && (
-        <div className={`p-4 rounded-2xl shadow-sm relative overflow-hidden animate-fade-in ${isOverdue ? 'bg-red-500/10 border border-red-500/30' : 'bg-amber-500/10 border border-amber-500/30'}`} id="dashboard-water-notice">
-          <div className={`absolute top-0 right-0 h-16 w-16 rounded-bl-full flex items-start justify-end p-3 ${isOverdue ? 'bg-red-500/10' : 'bg-amber-500/10'}`}>
-            <AlertTriangle className={`h-5 w-5 opacity-50 ${isOverdue ? 'text-red-400' : 'text-amber-400'}`} />
-          </div>
-          <div className="flex flex-col gap-1.5 z-10 relative">
-            <span className={`text-[10px] font-bold font-sans uppercase tracking-widest flex items-center gap-1.5 ${isOverdue ? 'text-red-500' : 'text-amber-500'}`}>
-              <Droplets className="h-3 w-3" />
-              Water Levy Notice
-            </span>
-            <span className={`text-sm font-bold tracking-wide leading-tight ${isOverdue ? 'text-red-100' : 'text-amber-100'}`}>
-              {globalSetting.waterNoticeMessage}
-            </span>
-            
-            {deadlineMessage && (
-              <span className={`text-[11px] font-mono mt-1 font-bold ${isOverdue ? 'text-red-400 animate-pulse' : 'text-amber-400'}`}>
-                {deadlineMessage} (Due: {globalSetting.waterNoticeDeadline})
-              </span>
-            )}
-          </div>
-        </div>
-      )}
+
 
       {/* Water Pool Widget */}
       {waterPoolSummary && (
-        <div className="bg-slate-900 border border-sky-500/20 rounded-2xl p-4 flex items-center justify-between shadow-sm relative overflow-hidden" id="card-water-reserve-tenant">
+        <div className="bg-slate-900/40 backdrop-blur-2xl border border-sky-500/20 shadow-[inset_0_1px_1px_rgba(14,165,233,0.1)] rounded-[28px] p-5 flex items-center justify-between relative overflow-hidden" id="card-water-reserve-tenant">
           <div className="absolute top-0 right-0 h-16 w-16 bg-sky-500/10 rounded-bl-full flex items-start justify-end p-3">
             <Droplets className="h-5 w-5 text-sky-400 opacity-50" />
           </div>
           <div>
             <div className="flex items-center gap-1.5 mb-1">
               <Sparkles className="h-3 w-3 text-sky-400" />
-              <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-sky-400">Compound Water Reserve</span>
+              <span className="text-[10px] uppercase font-sans font-bold tracking-widest text-sky-400">Water Pump Power</span>
             </div>
-            <span className="text-xl font-extrabold text-slate-100 block tracking-tight leading-none">
-              {waterPoolSummary.waterUnitsRemaining.toFixed(1)} <span className="text-xs font-normal text-slate-400">kWh left</span>
+            <span className="text-2xl font-sans font-black text-slate-100 block tracking-tight leading-none">
+              {waterPoolSummary.waterUnitsRemaining.toFixed(1)} <span className="text-sm font-sans font-normal text-slate-400">kWh left</span>
             </span>
             <span className="text-[9px] text-slate-500 block mt-1.5 leading-tight">
               Prepaid power available for the water pump
@@ -178,181 +148,132 @@ export default function TenantSummaryCard({ summary, waterPoolSummary, globalSet
         </div>
       )}
 
-      {/* Grid of Key Financial metrics */}
+      {/* Actionable Alerts (extracted from cards) */}
+
+
+      {isElectricityTenant && electricityBalance < 0 && !isDepositDeficit && depositHeld > 0 && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-[24px] flex flex-col gap-2" id="deposit-covered-helper">
+          <span className="font-sans font-extrabold text-xs uppercase text-emerald-400 flex items-center gap-1.5">
+            <Coins className="h-4 w-4 animate-bounce" />
+            Settle Power Arrears
+          </span>
+          <button
+            type="button"
+            disabled={isApplying}
+            onClick={() => handleApplyDeposit('electricity', Math.abs(electricityBalance))}
+            className="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold tracking-tight rounded-xl text-xs transition-colors"
+          >
+            {isApplying ? 'Processing...' : `Apply ${formatNaira(Math.abs(electricityBalance))} from Deposit`}
+          </button>
+        </div>
+      )}
+
+      {outstandingWaterAmount > 0 && depositHeld >= outstandingWaterAmount && (
+        <div className="p-4 bg-sky-500/10 border border-sky-500/20 rounded-[24px] flex flex-col gap-2" id="deposit-water-helper">
+          <span className="font-sans font-extrabold text-xs uppercase text-sky-400 flex items-center gap-1.5">
+            <Droplets className="h-4 w-4 animate-bounce" />
+            Settle Water Bill
+          </span>
+          <button
+            type="button"
+            disabled={isApplying}
+            onClick={() => handleApplyDeposit('water', outstandingWaterAmount)}
+            className="w-full py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold tracking-tight rounded-xl text-xs transition-colors"
+          >
+            {isApplying ? 'Processing...' : `Apply ${formatNaira(outstandingWaterAmount)} from Deposit`}
+          </button>
+        </div>
+      )}
+
+      {/* Grid of Key Financial metrics (Icon Column Cards) */}
       <div className="grid grid-cols-2 gap-3.5">
         
-        {/* Metric 1: Electricity Balance (Only for Electricity tenants & Admins acting as tenant) */}
+        {/* Metric 1: Electricity Balance */}
         {isElectricityTenant && (
-          <div className="col-span-2 bg-slate-950 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden shadow-sm" id="card-electricity-balance">
-            {/* Ambient indicator glow */}
-            <div className={`absolute top-0 right-0 h-1.5 w-16 rounded-bl-lg ${electricityBalance >= 0 ? 'bg-emerald-500' : 'bg-red-500'}`} />
-            
-            <div className="flex items-center gap-2 mb-2">
-              <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${electricityBalance >= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-red-400 bg-red-500/10'}`}>
-                <Zap className="h-4 w-4" />
-              </div>
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Electricity Balance</span>
-            </div>
-
-            <div className="flex items-baseline gap-1.5 my-1">
-              <span className={`text-3xl font-extrabold tracking-tight ${electricityBalance >= 0 ? 'text-slate-100' : 'text-red-400'}`}>
-                {electricityBalance >= 0 ? '+' : '-'}{formatNaira(electricityBalance)}
-              </span>
-              <span className={`text-[10px] uppercase font-mono font-bold px-1.5 py-0.5 rounded-full ${electricityBalance >= 0 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                {electricityBalance >= 0 ? 'Credit' : 'Owes'}
-              </span>
+          <div className="bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-[28px] p-5 flex flex-col items-start justify-between relative shadow-[0_4px_30px_rgba(0,0,0,0.1)] aspect-square" id="card-electricity-balance">
+            <div className={`h-10 w-10 rounded-2xl flex items-center justify-center mb-2 ${electricityBalance >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+              <Zap className="h-5 w-5" />
             </div>
             
-            <p className="text-[11px] text-slate-404 mt-2 leading-relaxed">
-              {electricityBalance >= 0 
-                ? 'Your prepaid utility reserve is safe and active.' 
-                : 'Your post-paid usage has exceeded previous prepayments. Balance is negative.'}
-            </p>
-
-            {/* Deposit-Deficit Arrears Compliance Badge */}
-            {isDepositDeficit && (
-              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-[11px] rounded-xl flex flex-col gap-1.5" id="deposit-deficit-warning">
-                <span className="font-extrabold text-xs uppercase flex items-center gap-1">
-                  <AlertTriangle className="h-4 w-4 shrink-0 text-red-450" />
-                  Security Deposit Deficit!
-                </span>
-                <span>
-                  Your held Escrow Deposit ({formatNaira(depositHeld)}) is smaller than your outstanding electricity arrears. Please submit an additional deposit top-up of at least <strong>{formatNaira(Math.abs(electricityBalance) - depositHeld)}</strong> immediately.
-                </span>
-              </div>
-            )}
-
-            {/* Deposit Held settlement helper box if there are arrears but covered by escrow */}
-            {electricityBalance < 0 && !isDepositDeficit && depositHeld > 0 && (
-              <div className="mt-4 p-3 bg-slate-900 border border-emerald-500/20 text-[11px] rounded-xl flex flex-col gap-2" id="deposit-covered-helper">
-                <span className="font-bold text-slate-200 flex items-center gap-1.5">
-                  <Coins className="h-4 w-4 text-emerald-400 animate-bounce" />
-                  Settle Arrears via Escrow
-                </span>
-                <p className="text-slate-400 leading-tight">
-                  You have <strong>{formatNaira(depositHeld)}</strong> held in escrow. Use a portion of this deposit to clear your <strong>{formatNaira(electricityBalance)}</strong> arrears instantly.
-                </p>
-                <button
-                  type="button"
-                  id="apply-deposit-power-btn"
-                  disabled={isApplying}
-                  onClick={() => handleApplyDeposit('electricity', Math.abs(electricityBalance))}
-                  className="w-full py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold tracking-tight rounded-lg text-xs cursor-pointer select-none transition-colors"
-                >
-                  {isApplying ? 'Processing Settle...' : `Apply ${formatNaira(electricityBalance)} from Escrow`}
-                </button>
-              </div>
-            )}
+            <div className="w-full">
+              <span className={`text-2xl font-sans font-black tracking-tighter truncate block ${electricityBalance >= 0 ? 'text-slate-100' : 'text-red-400'}`}>
+                {electricityBalance >= 0 ? '+' : '-'}{formatNaira(Math.abs(electricityBalance))}
+              </span>
+              <span className="text-[10px] uppercase font-sans font-bold tracking-widest text-slate-500 block mt-1">
+                Power Balance
+              </span>
+            </div>
           </div>
         )}
 
         {/* Metric 2: Estimated Units Remaining */}
         {isElectricityTenant && (
-          <div className="bg-slate-950 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between shadow-sm" id="card-units-remaining">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingDown className="text-slate-500 h-4 w-4" />
-              <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-500">Energy Left</span>
+          <div className="bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-[28px] p-5 flex flex-col items-start justify-between relative shadow-[0_4px_30px_rgba(0,0,0,0.1)] aspect-square" id="card-units-remaining">
+            <div className="h-10 w-10 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400 mb-2">
+              <TrendingDown className="h-5 w-5" />
             </div>
-            <div>
-              <span className="text-xl font-extrabold text-slate-100 block tracking-tight leading-none">
-                {remainingUnitsEstimate.toFixed(1)} <span className="text-xs font-normal text-slate-600">kWh</span>
+            
+            <div className="w-full">
+              <span className="text-2xl font-sans font-black tracking-tighter text-slate-100 truncate block">
+                {remainingUnitsEstimate.toFixed(1)}<span className="text-sm text-slate-500 font-normal">kWh</span>
               </span>
-              <span className="text-[10px] text-slate-400 block mt-1.5 leading-tight">
-                Est. units remaining
+              <span className="text-[10px] uppercase font-sans font-bold tracking-widest text-slate-500 block mt-1">
+                Power Left
               </span>
-
-              <div className="mt-3 pt-3 border-t border-slate-800/60">
-                <span className="text-[9px] uppercase font-mono tracking-wider text-slate-500 block mb-0.5">Last Logged Index</span>
-                {summary.readings && summary.readings.length > 0 ? (
-                  <>
-                    <span className="text-sm font-extrabold text-emerald-400 font-mono">
-                      {summary.readings.sort((a, b) => new Date(b.reading_date).getTime() - new Date(a.reading_date).getTime())[0].reading_kwh} kWh
-                    </span>
-                    <span className="text-[9px] text-slate-500 font-mono ml-1">
-                      ({new Date(summary.readings[0].reading_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })})
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-[10px] text-slate-500 italic">No meter index logged yet.</span>
-                )}
-              </div>
             </div>
           </div>
         )}
 
         {/* Metric 3: Deposit escrow */}
-        <div className={`bg-slate-950 border border-slate-800/90 rounded-2xl p-4 flex flex-col justify-between shadow-sm ${isWaterOnlyTenant ? 'col-span-2' : ''}`} id="card-deposit-held">
-          <div className="flex items-center gap-2 mb-2">
-            <ShieldCheck className="text-slate-500 h-4 w-4" />
-            <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-slate-500">Escrow Dep.</span>
+        <div className={`bg-slate-900/40 backdrop-blur-2xl border border-white/10 rounded-[28px] p-5 flex flex-col items-start justify-between relative shadow-[0_4px_30px_rgba(0,0,0,0.1)] aspect-square ${isWaterOnlyTenant ? 'col-span-1' : ''}`} id="card-deposit-held">
+          <div className="h-10 w-10 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-400 mb-2">
+            <ShieldCheck className="h-5 w-5" />
           </div>
-          <div>
-            <span className="text-xl font-extrabold text-slate-100 block tracking-tight leading-none">
+          
+          <div className="w-full">
+            <span className="text-2xl font-sans font-black tracking-tighter text-slate-100 truncate block">
               {formatNaira(depositHeld)}
             </span>
-            <span className="text-[10px] text-slate-400 block mt-1.5 leading-tight">
-              Held in house escrow
+            <span className="text-[10px] uppercase font-sans font-bold tracking-widest text-slate-500 block mt-1">
+              My Deposit
             </span>
           </div>
         </div>
 
         {/* Metric 4: Outstanding Water pump contributions */}
-        <div className="col-span-2 bg-slate-950 border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between relative overflow-hidden shadow-sm animate-fade-in" id="card-water-obligation">
-          <div className={`absolute top-0 right-0 h-1.5 w-16 rounded-bl-lg ${outstandingWaterAmount === 0 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-          
-          <div className="flex items-center gap-2 mb-2">
-            <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${outstandingWaterAmount === 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-amber-400 bg-amber-500/10'}`}>
-              <Droplets className="h-4 w-4" />
-            </div>
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Water Pump Levy</span>
+        <div className={`bg-slate-900/40 backdrop-blur-2xl border ${globalSetting?.waterNoticeActive && isOverdue ? 'border-red-500/50' : globalSetting?.waterNoticeActive ? 'border-amber-500/50' : 'border-white/10'} rounded-[28px] p-5 flex flex-col items-start justify-between relative shadow-[0_4px_30px_rgba(0,0,0,0.1)] ${isWaterOnlyTenant ? 'col-span-1' : ''}`} id="card-water-obligation">
+          <div className={`absolute top-0 right-0 h-1.5 w-12 rounded-bl-lg ${outstandingWaterAmount === 0 ? 'bg-emerald-500' : isOverdue ? 'bg-red-500' : 'bg-amber-500'}`} />
+          <div className={`h-10 w-10 rounded-2xl flex items-center justify-center mb-2 ${outstandingWaterAmount === 0 ? 'bg-emerald-500/10 text-emerald-400' : isOverdue ? 'bg-red-500/10 text-red-400 animate-pulse' : 'bg-amber-500/10 text-amber-400 animate-pulse'}`}>
+            <Droplets className="h-5 w-5" />
           </div>
-
-          <div className="flex justify-between items-baseline mb-1">
-            <div className="flex items-baseline gap-1.5">
-              <span className={`text-2xl font-extrabold tracking-tight ${outstandingWaterAmount === 0 ? 'text-slate-350' : 'text-amber-400'}`}>
-                {outstandingWaterAmount === 0 ? '₦0' : formatNaira(outstandingWaterAmount)}
+          
+          <div className="w-full flex flex-col gap-2">
+            <div>
+              <span className={`text-2xl font-sans font-black tracking-tighter truncate block ${outstandingWaterAmount === 0 ? 'text-slate-100' : isOverdue ? 'text-red-400' : 'text-amber-400'}`}>
+                {outstandingWaterAmount === 0 ? '₦0' : `-${formatNaira(outstandingWaterAmount)}`}
               </span>
-              {outstandingWaterAmount > 0 && (
-                <span className="text-[10px] text-amber-400 font-bold uppercase font-mono px-1.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 animate-pulse">
-                  {summary.outstandingWaterCount} month{summary.outstandingWaterCount > 1 ? 's' : ''} unpaid
-                </span>
-              )}
+              <span className="text-[10px] uppercase font-sans font-bold tracking-widest text-slate-500 block mt-1">
+                Water Bill
+              </span>
             </div>
 
-            {outstandingWaterAmount === 0 && (
-              <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                Up-to-date
-              </span>
+            {globalSetting?.waterNoticeActive && (
+              <div className="mt-2 pt-2 border-t border-white/10 flex flex-col gap-1">
+                <span className={`text-[9px] font-bold font-sans uppercase tracking-widest flex items-center gap-1 ${isOverdue ? 'text-red-500' : 'text-amber-500'}`}>
+                  Water Levy Notice
+                </span>
+                <span className={`text-[10px] font-bold tracking-wide leading-tight ${isOverdue ? 'text-red-100' : 'text-amber-100'}`}>
+                  {globalSetting.waterNoticeMessage}
+                </span>
+                
+                {deadlineMessage && (
+                  <span className={`text-[9px] font-sans mt-0.5 font-bold ${isOverdue ? 'text-red-400 animate-pulse' : 'text-amber-400'}`}>
+                    {deadlineMessage} (Due: {globalSetting.waterNoticeDeadline})
+                  </span>
+                )}
+              </div>
             )}
           </div>
-
-          <p className="text-[11px] text-slate-400 mt-2 leading-relaxed">
-            {outstandingWaterAmount === 0 
-              ? 'Thank you! Your water pump contributions are fully paid.' 
-              : 'Please clear your outstanding water pump levy to avoid disconnection.'}
-          </p>
-
-          {/* Settle water using security deposit */}
-          {outstandingWaterAmount > 0 && depositHeld >= outstandingWaterAmount && (
-            <div className="mt-4 p-3 bg-slate-900 border border-emerald-500/20 text-[11px] rounded-xl flex flex-col gap-2" id="deposit-water-helper-box">
-              <span className="font-bold text-slate-205 flex items-center gap-1.5">
-                <Coins className="h-4 w-4 text-emerald-400" />
-                Settle Levy via Escrow
-              </span>
-              <p className="text-slate-400 leading-tight">
-                Instantly clear your outstanding water pump levy of <strong>{formatNaira(outstandingWaterAmount)}</strong> using your escrow deposit.
-              </p>
-              <button
-                type="button"
-                id="apply-deposit-water-btn"
-                disabled={isApplying}
-                onClick={() => handleApplyDeposit('water', outstandingWaterAmount)}
-                className="w-full py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold tracking-tight rounded-lg text-xs cursor-pointer select-none transition-colors"
-              >
-                {isApplying ? 'Processing Settle...' : `Apply ${formatNaira(outstandingWaterAmount)} from Escrow`}
-              </button>
-            </div>
-          )}
         </div>
 
       </div>

@@ -47,7 +47,7 @@ export default function WaterStatusGrid({
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 shadow-xl" id="water-status-compliance-grid">
+    <div className="bg-slate-900/40 backdrop-blur-xl border border-white/10 rounded-3xl p-4 shadow-[0_4px_30px_rgba(0,0,0,0.1)]" id="water-status-compliance-grid">
       <div className="flex items-center justify-between mb-4 px-1">
         <div>
           <span className="text-[10px] font-mono tracking-wider font-bold text-slate-500 uppercase">
@@ -65,7 +65,7 @@ export default function WaterStatusGrid({
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="text-[10px] font-mono text-slate-400 bg-slate-950 px-2 py-1 rounded border border-slate-800 font-bold">
+          <span className="text-[10px] font-mono text-slate-400 bg-black/20 backdrop-blur-sm px-2 py-1 rounded border border-white/10 font-bold">
             {monthLabels[displayMonths[0]]} - {monthLabels[displayMonths[2]]}
           </span>
           <button 
@@ -92,7 +92,7 @@ export default function WaterStatusGrid({
           </thead>
           <tbody className="divide-y divide-slate-800/80">
             {tenants.map(tenant => (
-              <tr key={tenant.id} className="text-xs hover:bg-slate-950/20 transition-colors">
+              <tr key={tenant.id} className="text-xs hover:bg-white/5 transition-colors">
                 <td className="py-3 px-2">
                   <div className="font-bold text-slate-200">{tenant.room_label}</div>
                   <div className="text-[10px] text-slate-500 truncate max-w-[110px]">{tenant.full_name}</div>
@@ -104,7 +104,7 @@ export default function WaterStatusGrid({
                   if (!contrib) {
                     return (
                       <td key={month} className="py-3 px-2 text-center">
-                        <span className="text-[10px] text-slate-600 bg-slate-950 px-2 py-1 rounded font-mono select-none">
+                        <span className="text-[10px] text-slate-500 bg-black/20 backdrop-blur-sm px-2 py-1 rounded font-mono select-none">
                           Empty
                         </span>
                       </td>
@@ -120,7 +120,7 @@ export default function WaterStatusGrid({
                       case 'waived':
                         return 'bg-slate-800 text-slate-400 border-slate-750/30';
                       default:
-                        return 'bg-slate-900 text-slate-500 border-slate-800';
+                        return 'bg-white/5 text-slate-400 border-white/10';
                     }
                   };
 

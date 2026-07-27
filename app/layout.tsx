@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0f172a',
+  themeColor: '#020617',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -28,11 +28,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en">
-      <body suppressHydrationWarning className="bg-slate-950 font-sans antialiased text-slate-100 min-h-screen">
+      <body suppressHydrationWarning className="bg-[#020617] font-sans antialiased text-slate-100 min-h-screen relative selection:bg-green-500/30">
+        {/* Ambient background glows */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden flex justify-center z-[-1]">
+          <div className="absolute top-[-20%] left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-emerald-500/10 blur-[120px] rounded-full"></div>
+          <div className="absolute bottom-[-20%] left-1/4 w-[600px] h-[300px] bg-slate-800/40 blur-[100px] rounded-full"></div>
+        </div>
+
         {/* Maximum 430px Container centered on Desktop */}
-        <div className="relative mx-auto min-h-screen max-w-[430px] bg-slate-900 shadow-2xl flex flex-col border-x border-slate-800">
+        <div className="relative mx-auto min-h-screen max-w-[430px] bg-slate-900/40 backdrop-blur-3xl shadow-2xl flex flex-col border-x border-white/5">
           <GlobalHeader user={user} />
-          <main className="flex-1 w-full flex flex-col">
+          <main className="flex-1 w-full flex flex-col relative z-0">
             {children}
           </main>
           <BottomNav role={user?.role} />

@@ -90,12 +90,12 @@ export default function ProfileClientView({ user, summary }: ProfileClientViewPr
     <div className="flex flex-col gap-5" id="profile-client-layout">
       {/* Visual Identity Badge */}
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex items-center gap-4.5">
-        <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 flex items-center justify-center text-xl font-bold font-mono">
+        <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/15 flex items-center justify-center text-2xl font-extrabold font-sans">
           {user.full_name.charAt(0) || 'U'}
         </div>
         <div>
-          <h2 className="text-base font-bold text-slate-100">{user.full_name}</h2>
-          <span className="text-[10px] font-mono tracking-wider font-bold text-slate-500 uppercase block mt-1">
+          <h2 className="text-base font-extrabold tracking-tight text-slate-100">{user.full_name}</h2>
+          <span className="text-[10px] font-sans tracking-widest font-bold text-slate-500 uppercase block mt-1">
             Role: {user.role.replace('_', ' ')}
           </span>
         </div>
@@ -103,7 +103,7 @@ export default function ProfileClientView({ user, summary }: ProfileClientViewPr
 
       {/* Profile Particulars Fields */}
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex flex-col gap-4">
-        <h3 className="text-xs uppercase font-mono tracking-wider font-bold text-slate-400 border-b border-slate-800/80 pb-2">
+        <h3 className="text-[10px] uppercase font-sans tracking-widest font-bold text-slate-500 border-b border-slate-800/80 pb-3">
           Registration Details
         </h3>
 
@@ -111,8 +111,8 @@ export default function ProfileClientView({ user, summary }: ProfileClientViewPr
         <div className="flex items-start gap-3 text-xs leading-normal">
           <MapPin className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
           <div>
-            <span className="text-slate-500 block uppercase font-mono text-[9px] tracking-wider">Assigned Room Unit</span>
-            <span className="font-bold text-slate-200">{user.room_label}</span>
+            <span className="text-slate-500 block uppercase font-sans font-bold text-[9px] tracking-wider">Assigned Room Unit</span>
+            <span className="font-bold text-sm text-slate-200 mt-0.5 block">{user.room_label}</span>
           </div>
         </div>
 
@@ -121,14 +121,14 @@ export default function ProfileClientView({ user, summary }: ProfileClientViewPr
           <div className="flex items-start gap-3 text-xs leading-normal">
             <Cpu className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
             <div className="w-full">
-              <span className="text-slate-500 block uppercase font-mono text-[9px] tracking-wider">Electrical Sub-Meter ID</span>
-              <div className="flex items-baseline justify-between w-full pr-1">
-                <span className="font-bold font-mono text-slate-200">{user.meter_id}</span>
+              <span className="text-slate-500 block uppercase font-sans font-bold text-[9px] tracking-wider">Electrical Sub-Meter ID</span>
+              <div className="flex items-baseline justify-between w-full pr-1 mt-0.5">
+                <span className="font-extrabold text-sm font-sans text-slate-200">{user.meter_id}</span>
                 <button
                   type="button"
                   id="copy-meter-id-trigger"
                   onClick={() => copyMeter(user.meter_id)}
-                  className="text-[9px] font-mono hover:underline text-indigo-400"
+                  className="text-[10px] font-bold font-sans hover:underline text-indigo-400 uppercase tracking-wider"
                 >
                   Copy
                 </button>
@@ -141,8 +141,8 @@ export default function ProfileClientView({ user, summary }: ProfileClientViewPr
         <div className="flex items-start gap-3 text-xs leading-normal">
           <Mail className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
           <div>
-            <span className="text-slate-500 block uppercase font-mono text-[9px] tracking-wider">Email Address</span>
-            <span className="font-medium text-slate-300">{user.email}</span>
+            <span className="text-slate-500 block uppercase font-sans font-bold text-[9px] tracking-wider">Email Address</span>
+            <span className="font-medium text-sm text-slate-300 mt-0.5 block">{user.email}</span>
           </div>
         </div>
 
@@ -150,19 +150,19 @@ export default function ProfileClientView({ user, summary }: ProfileClientViewPr
         <div className="flex items-start gap-3 text-xs leading-normal">
           <Phone className="h-4 w-4 text-slate-400 shrink-0 mt-0.5" />
           <div>
-            <span className="text-slate-500 block uppercase font-mono text-[9px] tracking-wider">Registered Phone</span>
-            <span className="font-medium text-slate-300">{user.phone || 'Not configured'}</span>
+            <span className="text-slate-500 block uppercase font-sans font-bold text-[9px] tracking-wider">Registered Phone</span>
+            <span className="font-medium text-sm text-slate-300 mt-0.5 block">{user.phone || 'Not configured'}</span>
           </div>
         </div>
       </div>
 
       {/* Change Password Card - Native iOS feel */}
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 flex flex-col gap-4">
-        <h3 className="text-xs uppercase font-mono tracking-wider font-bold text-slate-400 border-b border-slate-800/80 pb-2 flex items-center gap-1.5">
+        <h3 className="text-[10px] uppercase font-sans tracking-widest font-bold text-slate-500 border-b border-slate-800/80 pb-3 flex items-center gap-2">
           <Key className="h-4 w-4 text-emerald-400" /> Authentication Credentials
         </h3>
 
-        <form onSubmit={handlePasswordChange} className="flex flex-col gap-4" id="tenant-change-password-form">
+        <form onSubmit={handlePasswordChange} className="flex flex-col gap-4 mt-1" id="tenant-change-password-form">
           {pwError && (
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/15 text-red-400 text-xs flex gap-2 items-center animate-fade-in" id="pw-change-error">
               <AlertCircle className="h-4 w-4 shrink-0" />
@@ -177,48 +177,48 @@ export default function ProfileClientView({ user, summary }: ProfileClientViewPr
             </div>
           )}
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             <div>
-              <label className="block text-[9px] font-bold font-mono uppercase text-slate-400 mb-1.5 tracking-wider">Current Password</label>
+              <label className="block text-[10px] font-bold font-sans uppercase text-slate-400 mb-2 tracking-wider">Current Password</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 h-3.5 w-3.5" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 h-4 w-4" />
                 <input
                   type="password"
                   placeholder="Enter current password (fallback: 12345)"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   required
-                  className="w-full bg-slate-950 border border-slate-850 focus:border-emerald-500 outline-none rounded-xl py-2 pl-9 pr-3 text-xs text-white"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-2xl py-3.5 pl-11 pr-4 text-sm text-white font-sans transition-colors placeholder:text-slate-600"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[9px] font-bold font-mono uppercase text-slate-400 mb-1.5 tracking-wider">New Password</label>
+              <label className="block text-[10px] font-bold font-sans uppercase text-slate-400 mb-2 tracking-wider">New Password</label>
               <div className="relative">
-                <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 h-3.5 w-3.5" />
+                <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 h-4 w-4" />
                 <input
                   type="password"
                   placeholder="At least 4 characters"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  className="w-full bg-slate-950 border border-slate-850 focus:border-emerald-500 outline-none rounded-xl py-2 pl-9 pr-3 text-xs text-white"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-2xl py-3.5 pl-11 pr-4 text-sm text-white font-sans transition-colors placeholder:text-slate-600"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-[9px] font-bold font-mono uppercase text-slate-400 mb-1.5 tracking-wider">Confirm New Password</label>
+              <label className="block text-[10px] font-bold font-sans uppercase text-slate-400 mb-2 tracking-wider">Confirm New Password</label>
               <div className="relative">
-                <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 h-3.5 w-3.5" />
+                <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 h-4 w-4" />
                 <input
                   type="password"
                   placeholder="Re-type new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="w-full bg-slate-950 border border-slate-850 focus:border-emerald-500 outline-none rounded-xl py-2 pl-9 pr-3 text-xs text-white"
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-2xl py-3.5 pl-11 pr-4 text-sm text-white font-sans transition-colors placeholder:text-slate-600"
                 />
               </div>
             </div>
@@ -248,8 +248,8 @@ export default function ProfileClientView({ user, summary }: ProfileClientViewPr
         {isLoggingOut ? 'Terminating Session...' : 'Sign Out of Account'}
       </button>
 
-      <p className="text-[9px] text-slate-600 text-center font-mono mt-2">
-        MeterMate v1.0.0 • Mobile Progressive Web App
+      <p className="text-[9px] text-slate-600 text-center font-sans uppercase font-bold tracking-widest mt-2">
+        MeterMate v1.0.0 • Web App
       </p>
     </div>
   );

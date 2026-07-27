@@ -147,14 +147,9 @@ export default function GlobalHeader({ user }: GlobalHeaderProps) {
   return (
     <>
       {/* Visual Top Bar Header */}
-      <header className="sticky top-0 z-40 h-[56px] w-full bg-slate-950/80 backdrop-blur-md px-5 py-3.5 flex items-center justify-between" id="global-application-header">
+      <header className="relative z-40 h-[56px] w-full bg-transparent px-5 py-3.5 flex items-center justify-between" id="global-application-header">
         <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-90 transition-opacity" id="header-branding">
-          <div className="w-6.5 h-6.5 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 font-bold text-xs" id="header-accent-brand-icon">
-            <Zap className="h-3.5 w-3.5 fill-emerald-400/15" />
-          </div>
-          <span className="font-extrabold text-[13px] tracking-wider uppercase font-sans text-slate-200">
-            MeterMate
-          </span>
+          <img src="/logo.svg" alt="MeterMate Logo" className="h-8 w-auto object-contain" />
         </Link>
 
         {/* Header interactive Actions */}
@@ -163,16 +158,16 @@ export default function GlobalHeader({ user }: GlobalHeaderProps) {
           <button
             onClick={() => setMenuOpen(true)}
             id="open-notifications-menu-btn"
-            className="relative p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all cursor-pointer"
+            className="relative p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all cursor-pointer backdrop-blur-md border border-white/5 shadow-sm"
             aria-label="Open notifications center"
           >
             <Bell className="h-4 w-4" />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           </button>
 
-          {/* Quick role tag */}
-          <span className="text-[9px] font-bold font-mono px-2 py-1 rounded-lg bg-slate-900 text-slate-400 uppercase tracking-widest">
-            {isAdmin ? 'Landlord' : 'Tenant'}
+          {/* Quick user name tag */}
+          <span className="text-[10px] font-bold font-sans px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 uppercase tracking-widest backdrop-blur-sm">
+            {activeUser.full_name ? activeUser.full_name.split(' ')[0] : 'User'}
           </span>
         </div>
       </header>
@@ -184,10 +179,10 @@ export default function GlobalHeader({ user }: GlobalHeaderProps) {
             {/* Backdrop Layer */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setMenuOpen(false)}
-              className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-[#020617]/70 backdrop-blur-md"
             />
 
             {/* Content Drawer (Slides from right or bottom depending on mobile dimensions) */}
@@ -196,7 +191,7 @@ export default function GlobalHeader({ user }: GlobalHeaderProps) {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-              className="absolute bottom-0 left-0 right-0 mx-auto max-w-[430px] h-[90vh] bg-slate-900 rounded-t-3xl shadow-2xl flex flex-col"
+              className="absolute bottom-0 left-0 right-0 mx-auto max-w-[430px] h-[90vh] bg-slate-900/70 backdrop-blur-2xl border-t border-white/10 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] flex flex-col"
               id="notifications-overlay-panel"
             >
               {/* Drawer Draggable bar decoration */}
@@ -232,7 +227,7 @@ export default function GlobalHeader({ user }: GlobalHeaderProps) {
               </div>
 
               {/* Drawer Scrollable Content Area */}
-              <div className="flex-1 overflow-y-auto px-5 py-4 text-left flex flex-col gap-4 bg-slate-950">
+              <div className="flex-1 overflow-y-auto px-5 py-4 text-left flex flex-col gap-4 bg-transparent">
                 
                 <div className="flex flex-col gap-3" id="notif-tab-logs-view">
                   <div className="flex items-center justify-between">
@@ -272,7 +267,7 @@ export default function GlobalHeader({ user }: GlobalHeaderProps) {
                       {notifications.map((notif) => (
                         <div 
                           key={notif.id}
-                          className="bg-slate-900 rounded-xl p-3.5 flex items-start gap-3 transition-colors"
+                          className="bg-white/5 border border-white/10 backdrop-blur-lg rounded-xl p-3.5 flex items-start gap-3 transition-colors hover:bg-white/10"
                         >
                           <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center shrink-0 mt-0.5">
                             {getNotificationIcon(notif.title)}
@@ -304,7 +299,7 @@ export default function GlobalHeader({ user }: GlobalHeaderProps) {
               </div>
 
               {/* Drawer footer decoration element */}
-              <div className="bg-slate-900 px-5 py-3 shrink-0 rounded-b-none">
+              <div className="bg-white/5 border-t border-white/10 backdrop-blur-lg px-5 py-3 shrink-0 rounded-b-none">
                 <div className="flex items-center justify-between text-[8px] font-mono text-slate-600 tracking-wider">
                   <span>METERMATE NOTIFICATION LOG</span>
                   <span>V2.2</span>

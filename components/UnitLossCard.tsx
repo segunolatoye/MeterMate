@@ -22,7 +22,7 @@ export default function UnitLossCard({ summary }: UnitLossCardProps) {
   };
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-lg relative overflow-hidden" id="unit-loss-metric-card">
+    <div className="bg-slate-900/50 backdrop-blur-2xl border border-white/10 rounded-3xl p-5 shadow-lg relative overflow-hidden" id="unit-loss-metric-card">
       {/* Background visual accents */}
       <div className="absolute top-0 right-0 h-10 w-10 bg-red-500/5 rounded-bl-3xl border-l border-b border-red-500/10 flex items-center justify-center text-red-500">
         <ShieldAlert className="h-4 w-4" />
@@ -39,7 +39,7 @@ export default function UnitLossCard({ summary }: UnitLossCardProps) {
 
       {/* Row showing core percentages */}
       <div className="grid grid-cols-2 gap-3.5 mb-4">
-        <div className="p-3.5 bg-slate-950 border border-slate-800/60 rounded-2xl flex flex-col justify-between">
+        <div className="p-3.5 bg-slate-900/30 backdrop-blur-xl border border-white/5 rounded-2xl flex flex-col justify-between">
           <span className="text-[10px] uppercase font-mono text-slate-500">Lost Energy</span>
           <span className="text-lg font-bold text-slate-100 mt-1">
             {lostUnits.toFixed(1)} <span className="text-xs font-normal text-slate-400">kWh</span>
@@ -49,7 +49,7 @@ export default function UnitLossCard({ summary }: UnitLossCardProps) {
           </span>
         </div>
 
-        <div className="p-3.5 bg-slate-950 border border-slate-800/60 rounded-2xl flex flex-col justify-between">
+        <div className="p-3.5 bg-slate-900/30 backdrop-blur-xl border border-white/5 rounded-2xl flex flex-col justify-between">
           <span className="text-[10px] uppercase font-mono text-slate-500">Value Leakage</span>
           <span className="text-lg font-bold text-red-400 mt-1">
             {formatNaira(lostValue)}
@@ -62,7 +62,7 @@ export default function UnitLossCard({ summary }: UnitLossCardProps) {
       </div>
 
       {/* Metered Comparison Bar Widget */}
-      <div className="bg-slate-950 rounded-2xl p-4.5 border border-slate-800/70 flex flex-col gap-2.5">
+      <div className="bg-slate-900/30 backdrop-blur-xl rounded-2xl p-4.5 border border-white/5 flex flex-col gap-2.5">
         <div className="flex justify-between items-baseline text-[11px] font-mono">
           <span className="text-slate-400">System Flow Details:</span>
           <span className={`px-1.5 py-0.5 rounded text-[10px] uppercase ${hasLoss ? 'text-amber-400 bg-amber-500/10' : 'text-emerald-400 bg-emerald-500/10'}`}>

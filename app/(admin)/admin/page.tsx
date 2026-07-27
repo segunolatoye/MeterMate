@@ -3,7 +3,6 @@ import Link from 'next/link';
 import { getSessionUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { getAdminMetrics } from '@/lib/calculations';
-import UnitLossCard from '@/components/UnitLossCard';
 import BroadcastForm from '@/components/BroadcastForm';
 import DevicePushSetup from '@/components/DevicePushSetup';
 import { 
@@ -52,7 +51,7 @@ export default async function AdminDashboardPage() {
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between" id="stat-collected-month">
           <span className="text-[10px] uppercase font-mono text-slate-500 flex items-center gap-1">
             <Wallet className="h-3.5 w-3.5 text-emerald-400" />
-            Collected (Jun)
+            Collected ({new Date().toLocaleString('default', { month: 'short' })})
           </span>
           <span className="text-lg font-bold text-slate-100 tracking-tight leading-none mt-2.5">
             {formatNaira(metrics.collectedThisMonth)}
@@ -124,9 +123,6 @@ export default async function AdminDashboardPage() {
           <ChevronRight className="h-5 w-5 opacity-80" />
         </Link>
       )}
-
-      {/* System Flow Assessment Card */}
-      <UnitLossCard summary={metrics.unitLoss} />
 
       {/* Navigation Administration Grid */}
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4 flex flex-col gap-3">
