@@ -45,14 +45,53 @@ export default function TenantDetailClientView({ summary }: TenantDetailClientVi
   const [payAmount, setPayAmount] = useState<number>(0);
   const [payType, setPayType] = useState<'electricity' | 'water' | 'deposit'>('electricity');
   const [payNote, setPayNote] = useState('');
+  const [showAllLogs, setShowAllLogs] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const [isApplying, setIsApplying] = useState<'electricity' | 'water' | null>(null);
+  const [applyError, setApplyError] = useState<string | null>(null);
+  const [applySuccess, setApplySuccess] = useState<string | null>(null);
+
   const formatNairaVal = (val: number) => {
     return '₦' + Math.abs(val).toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  };
+
+  const handleApplyDeposit = async (target: 'electricity' | 'water', applyAmount: number) => {
+    if (applyAmount <= 0) return;
+    setIsApplying(target);
+    setApplyError(null);
+    setApplySuccess(null);
+    try {
+      const res = await fetch('/api/payments/apply-deposit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tenant_id: profile.id,
+          target_utility: target,
+          amount: applyAmount,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Failed to apply deposit.');
+      }
+      setApplySuccess(`Succeeded! Applied ${formatNairaVal(applyAmount)} from Escrow Deposit.`);
+      
+      // Delay reload to show success message
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (err: any) {
+      setApplyError(err.message || 'Error executing application.');
+    } finally {
+      setIsApplying(null);
+    }
   };
 
   const handleDeleteOccupant = async () => {
@@ -179,22 +218,94 @@ export default function TenantDetailClientView({ summary }: TenantDetailClientVi
       </button>
 
       {/* Profile summary tile */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-4.5 flex flex-col gap-2 relative overflow-hidden">
+      <div className="bg-slate-900 border border-transparent rounded-3xl p-5 flex flex-col gap-2 relative overflow-hidden">
         <span className="text-[10px] uppercase font-mono tracking-wider font-bold text-slate-500 block leading-none">
           Active Occupant
         </span>
-        <h2 className="text-lg font-bold text-slate-100 flex items-center gap-1.5 leading-tight mt-1.5">
+        <h2 className="text-lg font-bold text-slate-100 flex items-center gap-1.5 leading-tight mt-1">
           {profile.room_label} <span className="text-slate-500 font-normal">|</span> <span className="font-semibold text-slate-300 text-sm">{profile.full_name}</span>
         </h2>
         
-        {profile.role === 'electricity_tenant' && (
-          <p className="text-xs text-slate-400 font-mono mt-1">
-            Bal: <span className={`font-bold ${summary.electricityBalance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-              {summary.electricityBalance >= 0 ? '+' : ''}{formatNairaVal(summary.electricityBalance)}
+        <div className={`grid ${profile.role === 'electricity_tenant' || profile.role === 'admin' ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mt-2 pt-3 border-t border-slate-800/80`}>
+          {(profile.role === 'electricity_tenant' || profile.role === 'admin') && (
+            <div className="flex flex-col gap-1">
+              <span className="text-[9px] uppercase font-mono text-slate-500">Power Bal</span>
+              <span className={`font-mono text-xs font-bold ${summary.electricityBalance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                {summary.electricityBalance >= 0 ? '+' : ''}{formatNairaVal(summary.electricityBalance)}
+              </span>
+            </div>
+          )}
+          
+          <div className="flex flex-col gap-1">
+            <span className="text-[9px] uppercase font-mono text-slate-500">Water Bal</span>
+            <span className={`font-mono text-xs font-bold ${summary.outstandingWaterAmount > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+              {summary.outstandingWaterAmount > 0 ? '-' : ''}{formatNairaVal(summary.outstandingWaterAmount)}
             </span>
-          </p>
-        )}
+          </div>
+          
+          <div className="flex flex-col gap-1">
+            <span className="text-[9px] uppercase font-mono text-slate-500">Escrow</span>
+            <span className="font-mono text-xs font-bold text-slate-300">
+              {formatNairaVal(summary.depositHeld)}
+            </span>
+          </div>
+        </div>
       </div>
+
+      {applyError && (
+        <div className="p-3.5 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl flex items-center gap-2" id="admin-deposit-action-error-box">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <span>{applyError}</span>
+        </div>
+      )}
+
+      {applySuccess && (
+        <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs rounded-xl flex items-center gap-2" id="admin-deposit-action-success-box">
+          <CheckCircle className="h-4 w-4 shrink-0 animate-pulse" />
+          <span>{applySuccess}</span>
+        </div>
+      )}
+
+      {/* Admin Quick Escrow Actions */}
+      {(profile.role === 'electricity_tenant' || profile.role === 'admin') && summary.electricityBalance < 0 && summary.depositHeld >= 1000 && (
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-[24px] flex flex-col gap-2 animate-fade-in" id="admin-deposit-covered-helper">
+          <div className="flex justify-between items-center">
+            <span className="font-sans font-extrabold text-xs uppercase text-emerald-400 flex items-center gap-1.5">
+              <Zap className="h-4 w-4" />
+              Settle Power Arrears
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono">Escrow: {formatNairaVal(summary.depositHeld)}</span>
+          </div>
+          <button
+            type="button"
+            disabled={!!isApplying}
+            onClick={() => handleApplyDeposit('electricity', Math.min(Math.abs(summary.electricityBalance), summary.depositHeld))}
+            className="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold tracking-tight rounded-xl text-xs transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {isApplying === 'electricity' ? 'Processing...' : `Apply ${formatNairaVal(Math.min(Math.abs(summary.electricityBalance), summary.depositHeld))} from Deposit`}
+          </button>
+        </div>
+      )}
+
+      {summary.outstandingWaterAmount > 0 && summary.depositHeld >= summary.outstandingWaterAmount && (
+        <div className="p-4 bg-sky-500/10 border border-sky-500/20 rounded-[24px] flex flex-col gap-2 animate-fade-in" id="admin-deposit-water-helper">
+          <div className="flex justify-between items-center">
+            <span className="font-sans font-extrabold text-xs uppercase text-sky-400 flex items-center gap-1.5">
+              <Droplets className="h-4 w-4" />
+              Settle Water Arrears
+            </span>
+            <span className="text-[10px] text-slate-400 font-mono">Escrow: {formatNairaVal(summary.depositHeld)}</span>
+          </div>
+          <button
+            type="button"
+            disabled={!!isApplying}
+            onClick={() => handleApplyDeposit('water', Math.min(summary.outstandingWaterAmount, summary.depositHeld))}
+            className="w-full py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold tracking-tight rounded-xl text-xs transition-colors cursor-pointer disabled:opacity-50"
+          >
+            {isApplying === 'water' ? 'Processing...' : `Apply ${formatNairaVal(Math.min(summary.outstandingWaterAmount, summary.depositHeld))} from Deposit`}
+          </button>
+        </div>
+      )}
 
       {/* Tabs configuration bar */}
       <div className="bg-slate-900 p-1 border border-slate-800/80 rounded-xl grid grid-cols-3 gap-1" id="tenant-actions-tabs">
@@ -319,10 +430,10 @@ export default function TenantDetailClientView({ summary }: TenantDetailClientVi
             </h3>
             
             {payments.length === 0 ? (
-              <div className="p-5 text-center text-xs text-slate-500 bg-slate-900 border border-slate-800 rounded-2xl italic">No verified records.</div>
+              <div className="p-5 text-center text-xs text-slate-500 bg-slate-900 border-transparent rounded-2xl italic">No verified records.</div>
             ) : (
-              <div className="bg-slate-900 border border-slate-850 rounded-2xl overflow-hidden divide-y divide-slate-800/80">
-                {[...payments].reverse().map(p => (
+              <div className="bg-slate-900 border-transparent rounded-2xl overflow-hidden divide-y divide-slate-800/80">
+                {[...payments].reverse().slice(0, showAllLogs ? payments.length : 5).map(p => (
                   <div key={p.id} className="p-3.5 flex justify-between items-center text-xs">
                     <div>
                       <div className="font-bold text-slate-200 capitalize">
@@ -338,6 +449,14 @@ export default function TenantDetailClientView({ summary }: TenantDetailClientVi
                     </div>
                   </div>
                 ))}
+                {!showAllLogs && payments.length > 5 && (
+                  <button 
+                    onClick={() => setShowAllLogs(true)}
+                    className="w-full py-3 text-xs font-bold text-slate-400 hover:text-white bg-slate-800/20 hover:bg-slate-800/40 transition-colors"
+                  >
+                    View All {payments.length} Logs
+                  </button>
+                )}
               </div>
             )}
           </div>

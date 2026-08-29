@@ -264,21 +264,26 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
           {tenants.map(tenant => {
             const elecBal = tenant.summary?.electricityBalance || 0;
             const waterPending = tenant.summary?.outstandingWaterCount || 0;
+            const depositHeld = tenant.summary?.depositHeld || 0;
+            const outstandingWaterAmt = tenant.summary?.outstandingWaterAmount || 0;
+            
+            const hasEscrowFunds = depositHeld >= 1000;
+            const needsAttention = (elecBal < 0 && hasEscrowFunds) || (outstandingWaterAmt > 0 && depositHeld >= outstandingWaterAmt);
 
             return (
               <button
                 key={tenant.id}
                 id={`tenant-row-${tenant.id}`}
                 onClick={() => router.push(`/admin/tenants/${tenant.id}`)}
-                className="p-4 bg-slate-900 border border-slate-850 hover:border-slate-800 text-left rounded-3xl flex justify-between items-center text-xs gap-3.5 transition-all cursor-pointer active:scale-98"
+                className={`p-4 bg-slate-900 border text-left rounded-3xl flex justify-between items-center text-xs gap-3.5 transition-all cursor-pointer active:scale-98 ${needsAttention ? 'border-amber-500/20 bg-amber-500/5 hover:border-amber-500/40' : 'border-transparent hover:bg-slate-800/50'}`}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <div className={`h-11 w-11 rounded-2xl border flex items-center justify-center shrink-0 ${
-                    tenant.role === 'electricity_tenant' 
+                    (tenant.role === 'electricity_tenant' || tenant.role === 'admin')
                       ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/15' 
                       : 'text-sky-400 bg-sky-500/10 border-sky-500/15'
                   }`}>
-                    {tenant.role === 'electricity_tenant' ? <Zap className="h-5 w-5" /> : <Droplets className="h-5 w-5" />}
+                    {(tenant.role === 'electricity_tenant' || tenant.role === 'admin') ? <Zap className="h-5 w-5" /> : <Droplets className="h-5 w-5" />}
                   </div>
 
                   <div className="min-w-0">
@@ -289,7 +294,7 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
                       {tenant.full_name}
                     </span>
                     <div className="flex gap-2.5 mt-2 flex-wrap">
-                      {tenant.role === 'electricity_tenant' && tenant.meter_id && (
+                      {(tenant.role === 'electricity_tenant' || tenant.role === 'admin') && tenant.meter_id && (
                         <span className="font-mono text-[9px] text-slate-500 p-0.5 rounded bg-slate-950 border border-slate-850 leading-none">
                           Sub-Meter: {tenant.meter_id}
                         </span>
@@ -309,10 +314,10 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
 
                 {/* Ledger balances column */}
                 <div className="text-right flex flex-col gap-1 shrink-0">
-                  {tenant.role === 'electricity_tenant' && (
+                  {(tenant.role === 'electricity_tenant' || tenant.role === 'admin') && (
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[9px] uppercase font-mono text-slate-500 mt-1">
-                        Power Balance:
+                        Power Balance
                       </span>
                       <span className={`font-mono text-xs font-bold ${elecBal >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                         {formatNaira(elecBal)}
@@ -320,8 +325,17 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
                     </div>
                   )}
 
-                  <span className="text-[10px] text-slate-500 font-mono mt-2 flex items-center justify-end gap-0.5">
-                    Records <ArrowRight className="h-3.5 w-3.5" />
+                  <div className="flex flex-col gap-0.5 mt-1">
+                    <span className="text-[9px] uppercase font-mono text-slate-500">
+                      Escrow
+                    </span>
+                    <span className="font-mono text-[10px] font-bold text-slate-300">
+                      {formatNaira(depositHeld)}
+                    </span>
+                  </div>
+
+                  <span className={`text-[10px] font-mono mt-1 flex items-center justify-end gap-0.5 ${needsAttention ? 'text-amber-400 font-bold' : 'text-slate-500'}`}>
+                    {needsAttention ? 'Settle Arrears' : 'Records'} <ArrowRight className="h-3.5 w-3.5" />
                   </span>
                 </div>
               </button>
