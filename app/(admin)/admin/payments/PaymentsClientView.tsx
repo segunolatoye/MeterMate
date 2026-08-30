@@ -38,6 +38,7 @@ export default function PaymentsClientView({ initialPayments }: PaymentsClientVi
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'electricity' | 'water' | 'deposit' | 'prepayment'>('all');
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -88,6 +89,9 @@ export default function PaymentsClientView({ initialPayments }: PaymentsClientVi
       // 1. Status Filter
       if (filterType !== 'all' && p.status !== filterType) return false;
       
+      // 2. Type Filter
+      if (typeFilter !== 'all' && p.payment_type !== typeFilter) return false;
+      
       // 2. Search Query Filter (Name or Room)
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
@@ -115,7 +119,7 @@ export default function PaymentsClientView({ initialPayments }: PaymentsClientVi
   const exportToCSV = () => {
     if (filteredPayments.length === 0) return;
     
-    const headers = ['Date', 'Occupant', 'Room', 'Amount', 'Type', 'Method', 'Status', 'Reference'];
+    const headers = ['Date', 'Occupant', 'Room', 'Amount', 'Type', 'Method', 'Status', 'Reference', 'Admin Confirmed', 'Note'];
     const csvContent = [
       headers.join(','),
       ...filteredPayments.map(p => {
@@ -127,7 +131,9 @@ export default function PaymentsClientView({ initialPayments }: PaymentsClientVi
         const method = p.payment_method;
         const status = p.status;
         const ref = p.paystack_reference || '';
-        return `${date},${occupant},${room},${amount},${type},${method},${status},${ref}`;
+        const adminConfirmed = p.confirmed_by ? 'Yes' : 'No';
+        const note = `"${(p.note || '').replace(/"/g, '""')}"`;
+        return `${date},${occupant},${room},${amount},${type},${method},${status},${ref},${adminConfirmed},${note}`;
       })
     ].join('\n');
 
@@ -144,17 +150,37 @@ export default function PaymentsClientView({ initialPayments }: PaymentsClientVi
   const exportToWhatsApp = () => {
     if (filteredPayments.length === 0) return;
 
+    const confirmedPayments = filteredPayments.filter(p => p.status === 'confirmed');
+    const totalDeposits = confirmedPayments.filter(p => p.payment_type === 'deposit').reduce((sum, p) => sum + p.amount, 0);
+    const totalElectricity = confirmedPayments.filter(p => p.payment_type === 'electricity').reduce((sum, p) => sum + p.amount, 0);
+    const totalWater = confirmedPayments.filter(p => p.payment_type === 'water').reduce((sum, p) => sum + p.amount, 0);
+    const totalPrepayment = confirmedPayments.filter(p => p.payment_type === 'prepayment').reduce((sum, p) => sum + p.amount, 0);
+
     let text = `*MeterMate Payment Records*\n`;
     text += `Total Records: ${filteredPayments.length}\n`;
-    const totalAmount = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
-    text += `Total Amount: ₦${totalAmount.toLocaleString('en-NG')}\n\n`;
+    
+    if (totalDeposits > 0) text += `Total Deposits: ₦${totalDeposits.toLocaleString('en-NG')}\n`;
+    if (totalElectricity > 0) text += `Total Electricity: ₦${totalElectricity.toLocaleString('en-NG')}\n`;
+    if (totalWater > 0) text += `Total Water: ₦${totalWater.toLocaleString('en-NG')}\n`;
+    if (totalPrepayment > 0) text += `Total Prepayment: ₦${totalPrepayment.toLocaleString('en-NG')}\n`;
+    text += `\n`;
 
     filteredPayments.forEach((p, index) => {
       const date = new Date(p.created_at).toLocaleDateString('en-GB');
-      text += `${index + 1}. *${p.room_label}* - ${p.full_name}\n`;
+      
+      let tags = [];
+      if (p.payment_type === 'deposit') tags.push('DEPOSIT');
+      if (p.payment_method === 'manual') tags.push('ESCROW/INTERNAL');
+      if (p.confirmed_by) tags.push('ADMIN CONFIRMED');
+      
+      const tagString = tags.length > 0 ? ` [${tags.join(' | ')}]` : '';
+
+      text += `${index + 1}. *${p.room_label}* - ${p.full_name}${tagString}\n`;
       text += `   Amount: ₦${p.amount.toLocaleString('en-NG')}\n`;
-      text += `   Method: ${p.payment_method.replace('paystack_', '')}\n`;
-      text += `   Status: ${p.status}\n`;
+      text += `   Category: ${p.payment_type.toUpperCase()}\n`;
+      text += `   Method: ${p.payment_method.replace('paystack_', '').toUpperCase()}\n`;
+      text += `   Status: ${p.status.toUpperCase()}\n`;
+      if (p.note) text += `   Note: ${p.note}\n`;
       text += `   Date: ${date}\n\n`;
     });
 
@@ -204,14 +230,28 @@ export default function PaymentsClientView({ initialPayments }: PaymentsClientVi
               className="w-full bg-slate-950 border border-slate-800 focus:border-sky-500 outline-none rounded-lg py-2 px-3 text-xs text-slate-100"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-[9px] uppercase font-bold text-slate-500 mb-1">Category Type</label>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as any)}
+                className="w-full bg-slate-950 border border-slate-800 focus:border-sky-500 outline-none rounded-lg py-1.5 px-2.5 text-[11px] text-slate-100 uppercase"
+              >
+                <option value="all">All Types</option>
+                <option value="electricity">Electricity</option>
+                <option value="water">Water</option>
+                <option value="deposit">Deposit</option>
+                <option value="prepayment">Prepayment</option>
+              </select>
+            </div>
             <div>
               <label className="block text-[9px] uppercase font-bold text-slate-500 mb-1">Start Date</label>
               <input 
                 type="date" 
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 focus:border-sky-500 outline-none rounded-lg py-1.5 px-2.5 text-xs text-slate-100"
+                className="w-full bg-slate-950 border border-slate-800 focus:border-sky-500 outline-none rounded-lg py-1.5 px-2.5 text-[11px] text-slate-100"
               />
             </div>
             <div>
@@ -220,7 +260,7 @@ export default function PaymentsClientView({ initialPayments }: PaymentsClientVi
                 type="date" 
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 focus:border-sky-500 outline-none rounded-lg py-1.5 px-2.5 text-xs text-slate-100"
+                className="w-full bg-slate-950 border border-slate-800 focus:border-sky-500 outline-none rounded-lg py-1.5 px-2.5 text-[11px] text-slate-100"
               />
             </div>
           </div>

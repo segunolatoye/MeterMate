@@ -36,9 +36,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </div>
 
         {/* Maximum 430px Container centered on Desktop */}
-        <div className="relative mx-auto min-h-screen max-w-[430px] bg-slate-900/40 backdrop-blur-3xl shadow-2xl flex flex-col border-x border-white/5">
+        <div className="relative mx-auto min-h-[100dvh] max-w-[430px] bg-slate-900/40 backdrop-blur-3xl shadow-2xl flex flex-col border-x border-white/5">
           <GlobalHeader user={user} />
-          <main className="flex-1 w-full flex flex-col relative z-0 pb-24">
+          <main className="flex-1 w-full flex flex-col relative z-0">
             {children}
           </main>
           <BottomNav role={user?.role} />
