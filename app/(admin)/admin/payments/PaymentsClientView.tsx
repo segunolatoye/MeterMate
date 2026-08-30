@@ -12,7 +12,10 @@ import {
   ArrowUpRight, 
   Building, 
   SlidersHorizontal,
-  Wallet
+  Wallet,
+  Download,
+  Search,
+  Share2
 } from 'lucide-react';
 import { Payment } from '@/lib/types';
 
@@ -30,8 +33,11 @@ export default function PaymentsClientView({ initialPayments }: PaymentsClientVi
 
   const [payments, setPayments] = useState<ExtendedPayment[]>(initialPayments);
   
-  // Ledger sub category filter: pending | confirmed | all
+  // Filters
   const [filterType, setFilterType] = useState<'pending' | 'confirmed' | 'all'>('pending');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,9 +85,82 @@ export default function PaymentsClientView({ initialPayments }: PaymentsClientVi
   const filteredPayments = [...payments]
     .sort((a,b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .filter(p => {
-      if (filterType === 'all') return true;
-      return p.status === filterType;
+      // 1. Status Filter
+      if (filterType !== 'all' && p.status !== filterType) return false;
+      
+      // 2. Search Query Filter (Name or Room)
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        if (!p.full_name.toLowerCase().includes(query) && !p.room_label.toLowerCase().includes(query)) {
+          return false;
+        }
+      }
+
+      // 3. Date Range Filter
+      const pDate = new Date(p.created_at);
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (pDate < start) return false;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (pDate > end) return false;
+      }
+
+      return true;
     });
+
+  const exportToCSV = () => {
+    if (filteredPayments.length === 0) return;
+    
+    const headers = ['Date', 'Occupant', 'Room', 'Amount', 'Type', 'Method', 'Status', 'Reference'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredPayments.map(p => {
+        const date = new Date(p.created_at).toLocaleDateString('en-GB');
+        const occupant = `"${p.full_name.replace(/"/g, '""')}"`;
+        const room = `"${p.room_label.replace(/"/g, '""')}"`;
+        const amount = p.amount;
+        const type = p.payment_type;
+        const method = p.payment_method;
+        const status = p.status;
+        const ref = p.paystack_reference || '';
+        return `${date},${occupant},${room},${amount},${type},${method},${status},${ref}`;
+      })
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `payments_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToWhatsApp = () => {
+    if (filteredPayments.length === 0) return;
+
+    let text = `*MeterMate Payment Records*\n`;
+    text += `Total Records: ${filteredPayments.length}\n`;
+    const totalAmount = filteredPayments.reduce((sum, p) => sum + p.amount, 0);
+    text += `Total Amount: ₦${totalAmount.toLocaleString('en-NG')}\n\n`;
+
+    filteredPayments.forEach((p, index) => {
+      const date = new Date(p.created_at).toLocaleDateString('en-GB');
+      text += `${index + 1}. *${p.room_label}* - ${p.full_name}\n`;
+      text += `   Amount: ₦${p.amount.toLocaleString('en-NG')}\n`;
+      text += `   Method: ${p.payment_method.replace('paystack_', '')}\n`;
+      text += `   Status: ${p.status}\n`;
+      text += `   Date: ${date}\n\n`;
+    });
+
+    const encodedText = encodeURIComponent(text);
+    window.open(`https://wa.me/?text=${encodedText}`, '_blank');
+  };
 
   const formatNaira = (val: number) => {
     return '₦' + val.toLocaleString('en-NG', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -89,10 +168,63 @@ export default function PaymentsClientView({ initialPayments }: PaymentsClientVi
     <div className="flex flex-col gap-5 text-slate-100" id="payments-scr-manager">
       
       {/* Category control sliders */}
-      <div className="flex flex-col gap-2">
-        <label className="text-[10px] uppercase font-bold font-sans tracking-wide text-slate-550">
-          Filter Settlement Sheets
-        </label>
+      <div className="flex flex-col gap-3">
+        <div className="flex justify-between items-end">
+          <label className="text-[10px] uppercase font-bold font-sans tracking-wide text-slate-550">
+            Filter Settlement Sheets
+          </label>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportToWhatsApp}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 hover:bg-green-500/20 text-green-400 border border-green-500/20 rounded-lg text-[10px] font-bold uppercase transition-all"
+              title="Share via WhatsApp"
+            >
+              <Share2 className="h-3.5 w-3.5" />
+              WhatsApp
+            </button>
+            <button
+              onClick={exportToCSV}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 rounded-lg text-[10px] font-bold uppercase transition-all"
+            >
+              <Download className="h-3.5 w-3.5" />
+              CSV
+            </button>
+          </div>
+        </div>
+
+        {/* Date and Search Filters */}
+        <div className="bg-slate-900 border border-slate-800 p-3 rounded-xl flex flex-col gap-3 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Search className="h-4 w-4 text-slate-500" />
+            <input 
+              type="text" 
+              placeholder="Search by occupant name or room..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-sky-500 outline-none rounded-lg py-2 px-3 text-xs text-slate-100"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[9px] uppercase font-bold text-slate-500 mb-1">Start Date</label>
+              <input 
+                type="date" 
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 focus:border-sky-500 outline-none rounded-lg py-1.5 px-2.5 text-xs text-slate-100"
+              />
+            </div>
+            <div>
+              <label className="block text-[9px] uppercase font-bold text-slate-500 mb-1">End Date</label>
+              <input 
+                type="date" 
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 focus:border-sky-500 outline-none rounded-lg py-1.5 px-2.5 text-xs text-slate-100"
+              />
+            </div>
+          </div>
+        </div>
         
         <div className="bg-slate-900 border border-slate-800 p-1 rounded-xl flex gap-1 shadow-sm" id="ledger-payments-filters-bar">
           <button

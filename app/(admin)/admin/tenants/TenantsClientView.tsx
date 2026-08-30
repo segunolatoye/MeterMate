@@ -18,6 +18,7 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
   const router = useRouter();
   const [tenants, setTenants] = useState<TenantWithSummary[]>(initialTenants);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [sortBy, setSortBy] = useState<'name_asc' | 'name_desc' | 'room_asc' | 'room_desc' | 'escrow_desc' | 'escrow_asc'>('room_asc');
 
   // Form State
   const [fullName, setFullName] = useState('');
@@ -256,12 +257,34 @@ export default function TenantsClientView({ initialTenants }: TenantsClientViewP
 
       {/* Roster Listing */}
       <div className="flex flex-col gap-3">
-        <h3 className="text-xs uppercase tracking-wider font-mono font-bold text-slate-400 block px-1">
-          Registered Occupants ({tenants.length})
-        </h3>
+        <div className="flex justify-between items-center px-1">
+          <h3 className="text-xs uppercase tracking-wider font-mono font-bold text-slate-400">
+            Registered Occupants ({tenants.length})
+          </h3>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as any)}
+            className="bg-slate-950 border border-slate-800 focus:border-emerald-500 outline-none rounded-lg py-1 px-2 text-[10px] text-slate-300 font-mono"
+          >
+            <option value="room_asc">Room (A-Z)</option>
+            <option value="room_desc">Room (Z-A)</option>
+            <option value="name_asc">Name (A-Z)</option>
+            <option value="name_desc">Name (Z-A)</option>
+            <option value="escrow_desc">Escrow (High to Low)</option>
+            <option value="escrow_asc">Escrow (Low to High)</option>
+          </select>
+        </div>
 
         <div className="flex flex-col gap-3" id="tenant-profiles-listing-stack">
-          {tenants.map(tenant => {
+          {[...tenants].sort((a, b) => {
+            if (sortBy === 'room_asc') return (a.room_label || '').localeCompare(b.room_label || '');
+            if (sortBy === 'room_desc') return (b.room_label || '').localeCompare(a.room_label || '');
+            if (sortBy === 'name_asc') return (a.full_name || '').localeCompare(b.full_name || '');
+            if (sortBy === 'name_desc') return (b.full_name || '').localeCompare(a.full_name || '');
+            if (sortBy === 'escrow_desc') return (b.summary?.depositHeld || 0) - (a.summary?.depositHeld || 0);
+            if (sortBy === 'escrow_asc') return (a.summary?.depositHeld || 0) - (b.summary?.depositHeld || 0);
+            return 0;
+          }).map(tenant => {
             const elecBal = tenant.summary?.electricityBalance || 0;
             const waterPending = tenant.summary?.outstandingWaterCount || 0;
             const depositHeld = tenant.summary?.depositHeld || 0;
