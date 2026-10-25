@@ -16,6 +16,7 @@ import {
   Cpu
 } from 'lucide-react';
 import { Profile, ElectricityRate, MeterReading } from '@/lib/types';
+import { compareMeterReadings } from '@/lib/meter-readings';
 
 interface ElectricityClientViewProps {
   tenants: Profile[];
@@ -434,7 +435,7 @@ export default function ElectricityClientView({
                     {tenants.map(t => {
                       const tenantReadings = readings
                         .filter(r => r.tenant_id === t.id)
-                        .sort((a, b) => new Date(b.reading_date).getTime() - new Date(a.reading_date).getTime());
+                        .sort((a, b) => compareMeterReadings(b, a));
                       const lastKwh = tenantReadings.length > 0 ? tenantReadings[0].reading_kwh : 0;
                       
                       return (
@@ -482,7 +483,7 @@ export default function ElectricityClientView({
             {tenants.map(tenant => {
               const tenantReadings = readings
                 .filter(r => r.tenant_id === tenant.id)
-                .sort((a, b) => new Date(b.reading_date).getTime() - new Date(a.reading_date).getTime());
+                .sort((a, b) => compareMeterReadings(b, a));
                 
               const lastReading = tenantReadings[0];
               const isExpanded = expandedTenantHistory === tenant.id;

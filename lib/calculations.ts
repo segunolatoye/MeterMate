@@ -1,5 +1,6 @@
 import { DatabaseSchema } from './db';
 import { TokenPurchase, MeterReading, Payment, Profile, WaterContribution } from './types';
+import { compareMeterReadings } from './meter-readings';
 
 export interface TenantSummary {
   profile: Profile;
@@ -29,7 +30,7 @@ export function getTenantSummary(db: DatabaseSchema, tenantId: string): TenantSu
   // 2. Electricity Units Used
   const readings = [...db.meter_readings]
     .filter(r => r.tenant_id === tenantId)
-    .sort((a, b) => new Date(a.reading_date).getTime() - new Date(b.reading_date).getTime());
+    .sort(compareMeterReadings);
   
   let totalUsedUnits = 0;
   if (readings.length >= 2) {
@@ -107,7 +108,7 @@ export function getUnitLossSummary(db: DatabaseSchema): UnitLossSummary {
   for (const tenant of electricityTenants) {
     const tenantReadings = [...db.meter_readings]
       .filter(r => r.tenant_id === tenant.id)
-      .sort((a, b) => new Date(a.reading_date).getTime() - new Date(b.reading_date).getTime());
+      .sort(compareMeterReadings);
     
     if (tenantReadings.length >= 2) {
       const first = Number(tenantReadings[0].reading_kwh);
@@ -215,7 +216,7 @@ export function getWaterPoolSummary(db: DatabaseSchema): WaterPoolSummary {
   // Readings for WATER_PUMP pseudo-tenant
   const waterReadings = [...db.meter_readings]
     .filter(r => r.tenant_id === 'WATER_PUMP')
-    .sort((a, b) => new Date(a.reading_date).getTime() - new Date(b.reading_date).getTime());
+    .sort(compareMeterReadings);
 
   let totalWaterUnitsUsed = 0;
   if (waterReadings.length >= 2) {
@@ -234,4 +235,3 @@ export function getWaterPoolSummary(db: DatabaseSchema): WaterPoolSummary {
     waterReadings
   };
 }
-

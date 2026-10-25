@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { getSessionUser } from '@/lib/auth';
 import { getDb } from '@/lib/db';
 import { getTenantSummary } from '@/lib/calculations';
+import { compareMeterReadings } from '@/lib/meter-readings';
 import { 
   Calendar, 
   Clock, 
@@ -206,7 +207,7 @@ export default async function TenantHistoryPage({
             </div>
           ) : (
             <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-800 shadow-sm">
-              {[...summary.readings].sort((a, b) => new Date(b.reading_date).getTime() - new Date(a.reading_date).getTime()).map((r) => {
+              {[...summary.readings].sort((a, b) => compareMeterReadings(b, a)).map((r) => {
                 return (
                   <div key={r.id} className="p-4 flex justify-between items-center text-xs hover:bg-slate-950/20">
                     <div>

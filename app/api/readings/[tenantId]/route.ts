@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
 import { getSessionUser } from '@/lib/auth';
+import { compareMeterReadings } from '@/lib/meter-readings';
 
 export async function GET(
   req: NextRequest,
@@ -22,7 +23,7 @@ export async function GET(
     const db = await getDb();
     const readings = db.meter_readings
       .filter(r => r.tenant_id === tenantId)
-      .sort((a, b) => new Date(a.reading_date).getTime() - new Date(b.reading_date).getTime());
+      .sort(compareMeterReadings);
 
     return NextResponse.json({ success: true, readings });
 
